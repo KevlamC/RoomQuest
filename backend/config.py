@@ -11,6 +11,4 @@ def get_connection():
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME"),
         port=int(os.getenv("DB_PORT", 3306)),
-        ssl_ca=os.getenv("SSL_CA") if os.getenv("SSL_DISABLE", "False").lower() != "true" else None,
-        ssl_disabled=os.getenv("SSL_DISABLE", "False").lower() == "true"
     )
