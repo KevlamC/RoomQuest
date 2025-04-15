@@ -1,17 +1,16 @@
 import os
-
-# To import the stuff below: pip install flask flask-cors mysql-connector-python python-dotenv
-# and select the global python interpreter (at least I had to do that for it to be okay).
+import mysql.connector
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Only to load database configurations from the .env file.
 def get_connection():
     return mysql.connector.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME"),
-        port=int(os.getenv("DB_PORT", 3306))  # Default to 3306 if DB_PORT is not set
+        port=int(os.getenv("DB_PORT", 3306)),
+        ssl_ca=os.getenv("SSL_CA") if os.getenv("SSL_DISABLE", "False").lower() != "true" else None,
+        ssl_disabled=os.getenv("SSL_DISABLE", "False").lower() == "true"
     )
