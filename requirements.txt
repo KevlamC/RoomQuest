@@ -36,3 +36,4 @@ virtualenv
 Werkzeug
 mysql-connector-python
 flask-cors
+gunicorn
