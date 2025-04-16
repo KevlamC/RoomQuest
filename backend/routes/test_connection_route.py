@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from config import get_connection
 
 test_connection_bp = Blueprint("test_connection", __name__)
@@ -9,8 +9,8 @@ def test_connection():
         conn = get_connection()
         if conn.is_connected():
             conn.close()
-            return "✅ Successfully connected to the database!"
+            return jsonify({"status": "ok", "db": "connected"}), 200
         else:
-            return "❌ Connection failed."
+            return jsonify({"status": "error", "db": "not connected"}), 500
     except Exception as e:
-        return f"❌ Error: {e}"
+        return jsonify({"status": "error", "message": str(e)}), 500
