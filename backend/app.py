@@ -4,6 +4,8 @@ from routes.rooms import rooms_bp
 from config import get_connection
 from routes.test_connection_route import test_connection_bp  # this import is fine
 
+x = 0
+
 app = Flask(__name__)  # make sure this comes first!
 CORS(app)
 
