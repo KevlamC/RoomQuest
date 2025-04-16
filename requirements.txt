@@ -2,8 +2,5 @@ Flask
 Flask-SQLAlchemy
 psycopg2-binary
 python-dotenv
-torch
-torchaudio
-torchvision
 mysql-connector-python
 flask-cors
