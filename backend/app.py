@@ -1,16 +1,15 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-from routes.rooms import rooms_bp  # import your rooms blueprint
-from config import get_connection  # to check DB connection
-import os
+from routes.rooms import rooms_bp
+from config import get_connection
+from routes.test_connection_route import test_connection_bp  # this import is fine
 
-x = 0
-
-app = Flask(__name__)
-CORS(app)  # Enable CORS so Wix can connect
+app = Flask(__name__)  # make sure this comes first!
+CORS(app)
 
 # Register blueprints
 app.register_blueprint(rooms_bp, url_prefix="/api/rooms")
+app.register_blueprint(test_connection_bp)  # now it's safe to register this
 
 # TEMP: Add health check endpoint directly
 @app.route("/health", methods=["GET"])
@@ -24,7 +23,3 @@ def health_check():
             return jsonify({"status": "error", "db": "not connected"}), 500
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
-
-
-# Test does it work
