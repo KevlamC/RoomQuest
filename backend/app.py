@@ -4,6 +4,7 @@ from routes.rooms import rooms_bp  # import your rooms blueprint
 from config import get_connection  # to check DB connection
 import os
 
+x = 0
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS so Wix can connect
