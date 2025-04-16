@@ -80,4 +80,4 @@ jobs:
 
       - name: 'Set Startup Command for Azure App Service'
         run: |
-          az webapp config set --name RoomQuest --resource-group <your-resource-group> --startup-file 'gunicorn --bind 0.0.0.0:$PORT backend.app:app'
+          az webapp config set --name RoomQuest --resource-group ucalgary_471_project --startup-file 'gunicorn --bind 0.0.0.0:$PORT backend.app:app'
