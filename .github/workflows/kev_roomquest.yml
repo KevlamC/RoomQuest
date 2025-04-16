@@ -34,16 +34,15 @@ jobs:
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Zip artifact for deployment (excluding venv)
+        run: |
+          zip -r release.zip ./backend/* ./* -x "*/venv/*"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -62,9 +61,8 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip release.zip -d ./backend
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -78,4 +76,8 @@ jobs:
         with:
           app-name: 'RoomQuest'
           slot-name: 'Production'
-          
+          package: ./backend  # Point to your backend folder
+
+      - name: 'Set Startup Command for Azure App Service'
+        run: |
+          az webapp config set --name RoomQuest --resource-group <your-resource-group> --startup-file 'gunicorn --bind 0.0.0.0:$PORT backend.app:app'
