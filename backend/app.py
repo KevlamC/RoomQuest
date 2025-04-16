@@ -23,3 +23,14 @@ def health_check():
             return jsonify({"status": "error", "db": "not connected"}), 500
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+# Optional: Add an environment debug route
+# @app.route("/env", methods=["GET"])
+# def show_env():
+#     import os
+#     return jsonify(dict(os.environ))
+
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
