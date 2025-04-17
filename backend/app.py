@@ -5,6 +5,9 @@ from backend.config import get_connection
 from .routes.test_connection_route import test_connection_bp  # This is also a relative import
 from .routes.init_db_route import init_db_bp  # Import the init_db route
 
+
+x = 0
+
 app = Flask(__name__)  # make sure this comes first!
 CORS(app)
 
