@@ -3,7 +3,7 @@ from flask_cors import CORS
 from .routes.rooms import rooms_bp  # This is now a relative import
 from backend.config import get_connection
 from .routes.test_connection_route import test_connection_bp  # This is also a relative import
-
+from .routes.init_db_route import init_db_bp  # Import the init_db route
 
 app = Flask(__name__)  # make sure this comes first!
 CORS(app)
@@ -29,6 +29,16 @@ def health_check():
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({"message": "RoomQuest backend is running!"})
+
+@app.route("/api/rooms/test", methods=["GET"])
+def test_rooms():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM rooms;")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(rows)
 
 # Optional: Add an environment debug route
 # @app.route("/env", methods=["GET"])
