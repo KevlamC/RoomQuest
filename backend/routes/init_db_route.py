@@ -29,7 +29,8 @@ def init_db():
         CREATE TABLE USER (
             ID INT PRIMARY KEY,
             Email VARCHAR(255) UNIQUE NOT NULL,
-            Username VARCHAR(255) UNIQUE NOT NULL
+            Username VARCHAR(255) UNIQUE NOT NULL,
+            Password VARCHAR(255) UNIQUE NOT NULL
         );
         """)
 
@@ -52,7 +53,8 @@ def init_db():
         CREATE TABLE CLUB (
             ClubID INT PRIMARY KEY,
             Email VARCHAR(255) UNIQUE NOT NULL,
-            Username VARCHAR(255) UNIQUE NOT NULL
+            Username VARCHAR(255) UNIQUE NOT NULL,
+            Password VARCHAR(255) UNIQUE NOT NULL
         );
         """)
 
