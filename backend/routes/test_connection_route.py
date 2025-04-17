@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from config import get_connection
+from backend.config import get_connection
 
 test_connection_bp = Blueprint("test_connection", __name__)
 

@@ -1,8 +1,8 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-from routes.rooms import rooms_bp
-from config import get_connection
-from routes.test_connection_route import test_connection_bp  # this import is fine
+from .routes.rooms import rooms_bp  # This is now a relative import
+from backend.config import get_connection
+from .routes.test_connection_route import test_connection_bp  # This is also a relative import
 
 
 app = Flask(__name__)  # make sure this comes first!
@@ -24,6 +24,11 @@ def health_check():
             return jsonify({"status": "error", "db": "not connected"}), 500
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"message": "RoomQuest backend is running!"})
 
 # Optional: Add an environment debug route
 # @app.route("/env", methods=["GET"])
