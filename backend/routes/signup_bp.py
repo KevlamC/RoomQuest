@@ -10,19 +10,20 @@ def signup():
         data = request.get_json()
         user_id = data.get("id")
         email = data.get("email")
+        username = data.get("username")  # ✅ new field from frontend
         password = data.get("password")
 
-        if not all([user_id, email, password]):
+        if not all([user_id, email, username, password]):
             return jsonify({"success": False, "message": "Missing fields"}), 400
 
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Store user in the DB — adapt table/column names to match your schema
+        # Insert into USER table
         cursor.execute("""
-            INSERT INTO users (user_id, email, password)
-            VALUES (%s, %s, %s)
-        """, (user_id, email, password))
+            INSERT INTO USER (ID, Email, Username, Password)
+            VALUES (%s, %s, %s, %s)
+        """, (user_id, email, username, password))
 
         conn.commit()
         cursor.close()
