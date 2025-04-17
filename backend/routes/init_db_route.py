@@ -60,19 +60,22 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE ROOMS (
-            RoomID INT PRIMARY KEY,
             RoomNumber VARCHAR(255),
-            Building VARCHAR(255)
+            Building VARCHAR(255),
+            PRIMARY KEY (RoomNumber, Building)
         );
         """)
 
         cursor.execute("""
         CREATE TABLE FEATURES (
-            RoomID INT,
+            RoomNumber VARCHAR(255),
+            Building VARCHAR(255),
             Feature_Name VARCHAR(255),
-            PRIMARY KEY (RoomID, Feature_Name),
-            FOREIGN KEY (RoomID) REFERENCES ROOMS(RoomID) ON DELETE CASCADE ON UPDATE CASCADE
+            PRIMARY KEY (RoomNumber, Building, Feature_Name),
+            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
+                ON DELETE CASCADE ON UPDATE CASCADE
         );
+
         """)
 
         cursor.execute("""
