@@ -9,6 +9,8 @@ def init_db():
         connection = get_connection()
         cursor = connection.cursor()
 
+        cursor.execute("DROP TABLE IF EXISTS rooms;")
+
         # --- Example schema ---
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS rooms (
@@ -32,17 +34,13 @@ def init_db():
         for row in results:
             rooms_data.append(f"ID: {row[0]}, Name: {row[1]}, Capacity: {row[2]}")
         
-        # Drop table after retrieval
-        cursor.execute("DROP TABLE IF EXISTS rooms;")
         
         cursor.close()
         connection.close()
 
         # Return results to the browser
         return jsonify({
-            "message": "Tables created and test data inserted successfully.",
-            "rooms": rooms_data,
-            "table_dropped": "Table 'rooms' dropped successfully."
+            "message": "Tables created and test data inserted successfully."
         })
     
     except Exception as e:
