@@ -9,7 +9,7 @@ from .routes.init_db_route import init_db_bp  # Import the init_db route
 x = 0
 
 app = Flask(__name__)  # make sure this comes first!
-CORS(app, origins=["https://*.wixsite.com", "http://localhost:5173"], methods=["GET", "POST", "OPTIONS"])
+CORS(app, origins=["https://yashdhaneshwari.wixsite.com", "http://localhost:5173"], methods=["GET", "POST", "OPTIONS"])
 
 # Register blueprints
 app.register_blueprint(rooms_bp, url_prefix="/api/rooms")
