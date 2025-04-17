@@ -9,42 +9,155 @@ def init_db():
         connection = get_connection()
         cursor = connection.cursor()
 
-        cursor.execute("DROP TABLE IF EXISTS rooms;")
+        # Drop all tables if they exist (you might want to order this properly if foreign key constraints apply)
+        cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
+        cursor.execute("DROP TABLE IF EXISTS GETS_CLUB;")
+        cursor.execute("DROP TABLE IF EXISTS GETS_STUDENT;")
+        cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
+        cursor.execute("DROP TABLE IF EXISTS NOTIFICATIONS;")
+        cursor.execute("DROP TABLE IF EXISTS FEATURES;")
+        cursor.execute("DROP TABLE IF EXISTS TIME_SLOT;")
+        cursor.execute("DROP TABLE IF EXISTS COURSE;")
+        cursor.execute("DROP TABLE IF EXISTS STUDENT;")
+        cursor.execute("DROP TABLE IF EXISTS ADMIN;")
+        cursor.execute("DROP TABLE IF EXISTS CLUB;")
+        cursor.execute("DROP TABLE IF EXISTS USER;")
+        cursor.execute("DROP TABLE IF EXISTS ROOMS;")
 
-        # --- Example schema ---
+        # Recreate all tables
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS rooms (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            capacity INT NOT NULL
+        CREATE TABLE USER (
+            ID INT PRIMARY KEY,
+            Email VARCHAR(255) UNIQUE NOT NULL,
+            Username VARCHAR(255) UNIQUE NOT NULL
         );
         """)
 
-        # Insert test data
-        cursor.execute("INSERT INTO rooms (name, capacity) VALUES ('Room A', 10);")
-        cursor.execute("INSERT INTO rooms (name, capacity) VALUES ('Room B', 20);")
-        cursor.execute("INSERT INTO rooms (name, capacity) VALUES ('Room C', 15);")
+        cursor.execute("""
+        CREATE TABLE ADMIN (
+            ID INT PRIMARY KEY,
+            FOREIGN KEY (ID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE STUDENT (
+            ID INT PRIMARY KEY,
+            Points INT,
+            FOREIGN KEY (ID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE CLUB (
+            ClubID INT PRIMARY KEY,
+            Email VARCHAR(255) UNIQUE NOT NULL,
+            Username VARCHAR(255) UNIQUE NOT NULL
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE ROOMS (
+            RoomID INT PRIMARY KEY,
+            RoomNumber VARCHAR(255),
+            Building VARCHAR(255)
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE FEATURES (
+            RoomID INT,
+            Feature_Name VARCHAR(255),
+            PRIMARY KEY (RoomID, Feature_Name),
+            FOREIGN KEY (RoomID) REFERENCES ROOMS(RoomID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE COURSE (
+            CourseID INT PRIMARY KEY,
+            Name VARCHAR(255) NOT NULL,
+            Date DATE,
+            Hour TIME,
+            Duration INT,
+            Type VARCHAR(255),
+            SessionID INT
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE TIME_SLOT (
+            BookingID INT PRIMARY KEY,
+            UserID INT,
+            AdminID INT,
+            ClubID INT,
+            Date DATE,
+            Hour TIME,
+            Duration INT,
+            RoomID INT,
+            BookingType VARCHAR(255)
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE NOTIFICATIONS (
+            NotificationID INT PRIMARY KEY,
+            BookingID INT,
+            Date DATE,
+            Hour TIME,
+            RoomID INT,
+            FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (RoomID) REFERENCES ROOMS(RoomID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE GETS_STUDENT (
+            NotificationID INT,
+            StudentID INT,
+            PRIMARY KEY (NotificationID, StudentID),
+            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE GETS_CLUB (
+            NotificationID INT,
+            ClubID INT,
+            PRIMARY KEY (NotificationID, ClubID),
+            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ClubID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IS_MEMBER (
+            StudentID INT,
+            ClubID INT,
+            IsExec BOOLEAN,
+            PRIMARY KEY (StudentID, ClubID),
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ClubID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE POINTS_TRANSACTION (
+            TransactionID INT PRIMARY KEY,
+            StudentID INT,
+            PointsChange INT,
+            TransactionDate DATETIME,
+            Description VARCHAR(255),
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
 
         connection.commit()
-        
-        # --- Retrieve and print inserted rows ---
-        cursor.execute("SELECT * FROM rooms;")
-        results = cursor.fetchall()
-        rooms_data = []
-        for row in results:
-            rooms_data.append(f"ID: {row[0]}, Name: {row[1]}, Capacity: {row[2]}")
-        
-        
         cursor.close()
         connection.close()
 
-        # Return results to the browser
-        return jsonify({
-            "message": "Tables created and test data inserted successfully."
-        })
+        return jsonify({"message": "All tables created successfully."})
     
     except Exception as e:
-        return jsonify({
-            "message": "Error occurred",
-            "error": str(e)
-        })
+        return jsonify({"message": "Error occurred", "error": str(e)})
