@@ -10,7 +10,9 @@ CORS(app)
 
 # Register blueprints
 app.register_blueprint(rooms_bp, url_prefix="/api/rooms")
-app.register_blueprint(test_connection_bp)  # now it's safe to register this
+app.register_blueprint(test_connection_bp) 
+app.register_blueprint(init_db_bp)  
+
 
 # TEMP: Add health check endpoint directly
 @app.route("/health", methods=["GET"])
