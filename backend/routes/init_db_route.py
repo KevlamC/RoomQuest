@@ -99,8 +99,11 @@ def init_db():
             Date DATE,
             Hour TIME,
             Duration INT,
-            RoomID INT,
-            BookingType VARCHAR(255)
+            RoomNumber VARCHAR(255),
+            Building VARCHAR(255),
+            BookingType VARCHAR(255),
+            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
+                ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 
@@ -110,9 +113,11 @@ def init_db():
             BookingID INT,
             Date DATE,
             Hour TIME,
-            RoomID INT,
+            RoomNumber VARCHAR(255),
+            Building VARCHAR(255),
             FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (RoomID) REFERENCES ROOMS(RoomID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
+                ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 
