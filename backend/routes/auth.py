@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 import mysql.connector  # or your preferred connector
-from werkzeug.security import check_password_hash
 from backend.config import get_connection  # Make sure this is imported
 
 auth_bp = Blueprint('auth', __name__)
