@@ -96,24 +96,47 @@ def init_db():
             Duration INT DEFAULT 1,
             RoomNumber VARCHAR(255) NOT NULL,
             Building VARCHAR(255) NOT NULL,
-            BookingType ENUM('student', 'club', 'course', 'admin') NOT NULL,
+            BookingType ENUM('student', 'club', 'course', 'admin', 'university_event') NOT NULL,
             CourseID INT DEFAULT NULL,
+            IsApproved BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID) ON DELETE SET NULL ON UPDATE CASCADE
         );
 
         cursor.execute("""
+        CREATE TABLE EVENT_DETAILS (
+          BookingID    INT PRIMARY KEY,
+          EventName    VARCHAR(255) NOT NULL,
+          Description  TEXT          NULL,
+          IsPublic     BOOLEAN       DEFAULT TRUE,
+          Link         VARCHAR(255)  NULL,
+          EventType    ENUM('club', 'university') NOT NULL,
+          FOREIGN KEY (BookingID)    REFERENCES TIME_SLOT(BookingID)
+              ON DELETE CASCADE
+        );
+        """)
+
+        cursor.execute("""
         CREATE TABLE NOTIFICATIONS (
-            NotificationID INT PRIMARY KEY,
+            NotificationID INT PRIMARY KEY AUTO_INCREMENT,
             BookingID INT,
-            Date DATE,
-            Hour TIME,
-            RoomNumber VARCHAR(255),
-            Building VARCHAR(255),
+            Title VARCHAR(255),
+            Message TEXT,
+            Type ENUM('booking_approved', 'booking_cancelled', 'club_event', 'university_event', 'points_confirmation'),
             FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
-                ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE NOTIFICATION_PREFS (
+            StudentID INT,
+            ClubID INT,
+            WantsClubNotifications BOOLEAN DEFAULT TRUE,
+            WantsUniversityNotifications BOOLEAN DEFAULT TRUE,
+            PRIMARY KEY (StudentID, ClubID),
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE
         );
         """)
 
@@ -134,7 +157,7 @@ def init_db():
             PRIMARY KEY (NotificationID, ClubID),
             FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID)
                 ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (ClubID) REFERENCES USER(ID)
+            FOREIGN KEY (ClubID) REFERENCES Club(ID)
                 ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
