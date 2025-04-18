@@ -30,7 +30,8 @@ def init_db():
             ID INT PRIMARY KEY,
             Email VARCHAR(255) UNIQUE NOT NULL,
             Username VARCHAR(255) UNIQUE NOT NULL,
-            Password VARCHAR(255) UNIQUE NOT NULL
+            Password VARCHAR(255) UNIQUE NOT NULL,
+            userType ENUM('student', 'admin', 'club') DEFAULT 'student'
         );
         """)
 
@@ -51,10 +52,9 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE CLUB (
-            ClubID INT PRIMARY KEY,
-            Email VARCHAR(255) UNIQUE NOT NULL,
-            Username VARCHAR(255) UNIQUE NOT NULL,
-            Password VARCHAR(255) UNIQUE NOT NULL
+            ID INT PRIMARY KEY,
+            Points INT,
+            FOREIGN KEY (ID) REFERENCES USER(ID) ON DELETE CASCADE
         );
         """)
 
