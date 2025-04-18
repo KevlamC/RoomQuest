@@ -32,7 +32,7 @@ def init_db():
             ID INT PRIMARY KEY,
             Email VARCHAR(255) UNIQUE NOT NULL,
             Username VARCHAR(255) UNIQUE NOT NULL,
-            Password VARCHAR(255) UNIQUE NOT NULL,
+            Password VARCHAR(255) NOT NULL,
             userType ENUM('student', 'admin', 'club') DEFAULT 'student'
         );
         """)
