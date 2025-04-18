@@ -15,7 +15,7 @@ CORS(app, origins=["https://yashdhaneshwari.wixsite.com", "http://localhost:5173
 app.register_blueprint(rooms_bp, url_prefix="/api/rooms")
 app.register_blueprint(test_connection_bp) 
 app.register_blueprint(init_db_bp)
-app.register_blueprint(auth_bp, url_prefix="api/auth")
+app.register_blueprint(auth_bp)
 app.register_blueprint(user_bp)
 
 
