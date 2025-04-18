@@ -104,7 +104,7 @@ def init_db():
             FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
                 ON DELETE CASCADE ON UPDATE CASCADE
         );
-
+        """)
 
         cursor.execute("""
         CREATE TABLE NOTIFICATIONS (
