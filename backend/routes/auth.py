@@ -11,9 +11,6 @@ def login():
         email = data.get("Email")
         password = data.get("Password")
 
-        if not email or not password:
-            return jsonify({"success": False, "message": "Missing email or password."}), 400
-
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
