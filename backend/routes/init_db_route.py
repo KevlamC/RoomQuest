@@ -9,14 +9,16 @@ def init_db():
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Drop all tables if they exist (you might want to order this properly if foreign key constraints apply)
-        cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
+        # Drop in correct dependency order (child tables first)
         cursor.execute("DROP TABLE IF EXISTS GETS_CLUB;")
         cursor.execute("DROP TABLE IF EXISTS GETS_STUDENT;")
-        cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
+        cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
+        cursor.execute("DROP TABLE IF EXISTS NOTIFICATION_PREFS;")
         cursor.execute("DROP TABLE IF EXISTS NOTIFICATIONS;")
-        cursor.execute("DROP TABLE IF EXISTS FEATURES;")
+        cursor.execute("DROP TABLE IF EXISTS EVENT_DETAILS;")
+        cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
         cursor.execute("DROP TABLE IF EXISTS TIME_SLOT;")
+        cursor.execute("DROP TABLE IF EXISTS FEATURES;")
         cursor.execute("DROP TABLE IF EXISTS COURSE;")
         cursor.execute("DROP TABLE IF EXISTS STUDENT;")
         cursor.execute("DROP TABLE IF EXISTS ADMIN;")
@@ -30,7 +32,8 @@ def init_db():
             ID INT PRIMARY KEY,
             Email VARCHAR(255) UNIQUE NOT NULL,
             Username VARCHAR(255) UNIQUE NOT NULL,
-            Password VARCHAR(255) UNIQUE NOT NULL
+            Password VARCHAR(255) UNIQUE NOT NULL,
+            userType ENUM('student', 'admin', 'club') DEFAULT 'student'
         );
         """)
 
@@ -51,10 +54,9 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE CLUB (
-            ClubID INT PRIMARY KEY,
-            Email VARCHAR(255) UNIQUE NOT NULL,
-            Username VARCHAR(255) UNIQUE NOT NULL,
-            Password VARCHAR(255) UNIQUE NOT NULL
+            ID INT PRIMARY KEY,
+            Points INT,
+            FOREIGN KEY (ID) REFERENCES USER(ID) ON DELETE CASCADE
         );
         """)
 
@@ -80,44 +82,64 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE COURSE (
-            CourseID INT PRIMARY KEY,
-            Name VARCHAR(255) NOT NULL,
-            Date DATE,
-            Hour TIME,
-            Duration INT,
-            Type VARCHAR(255),
-            SessionID INT
+            CourseID INT PRIMARY KEY AUTO_INCREMENT,
+            CourseName VARCHAR(255),
+            SessionID INT,
+            Type ENUM('Lecture', 'Tutorial', 'Lab')
         );
         """)
 
         cursor.execute("""
         CREATE TABLE TIME_SLOT (
-            BookingID INT PRIMARY KEY,
-            UserID INT,
-            AdminID INT,
-            ClubID INT,
-            Date DATE,
-            Hour TIME,
-            Duration INT,
-            RoomNumber VARCHAR(255),
-            Building VARCHAR(255),
-            BookingType VARCHAR(255),
-            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            BookingID INT PRIMARY KEY AUTO_INCREMENT,
+            UserID INT NOT NULL,
+            Date DATE NOT NULL,
+            Hour TIME NOT NULL,
+            Duration INT DEFAULT 1,
+            RoomNumber VARCHAR(255) NOT NULL,
+            Building VARCHAR(255) NOT NULL,
+            BookingType ENUM('student', 'club', 'course', 'admin', 'university_event') NOT NULL,
+            CourseID INT DEFAULT NULL,
+            IsApproved BOOLEAN DEFAULT FALSE,
+            FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID) ON DELETE SET NULL ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE EVENT_DETAILS (
+          BookingID    INT PRIMARY KEY,
+          EventName    VARCHAR(255) NOT NULL,
+          Description  TEXT          NULL,
+          IsPublic     BOOLEAN       DEFAULT TRUE,
+          Link         VARCHAR(255)  NULL,
+          EventType    ENUM('club', 'university') NOT NULL,
+          FOREIGN KEY (BookingID)    REFERENCES TIME_SLOT(BookingID)
+              ON DELETE CASCADE
         );
         """)
 
         cursor.execute("""
         CREATE TABLE NOTIFICATIONS (
-            NotificationID INT PRIMARY KEY,
+            NotificationID INT PRIMARY KEY AUTO_INCREMENT,
             BookingID INT,
-            Date DATE,
-            Hour TIME,
-            RoomNumber VARCHAR(255),
-            Building VARCHAR(255),
-            FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            Title VARCHAR(255),
+            Message TEXT,
+            Type ENUM('booking_approved', 'booking_cancelled', 'club_event', 'university_event', 'points_confirmation'),
+            FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE NOTIFICATION_PREFS (
+            StudentID INT,
+            ClubID INT,
+            WantsClubNotifications BOOLEAN DEFAULT TRUE,
+            WantsUniversityNotifications BOOLEAN DEFAULT TRUE,
+            PRIMARY KEY (StudentID, ClubID),
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE
         );
         """)
 
@@ -136,8 +158,10 @@ def init_db():
             NotificationID INT,
             ClubID INT,
             PRIMARY KEY (NotificationID, ClubID),
-            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (ClubID) REFERENCES CLUB(ClubID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID)
+                ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES Club(ID)
+                ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 
@@ -148,7 +172,7 @@ def init_db():
             IsExec BOOLEAN,
             PRIMARY KEY (StudentID, ClubID),
             FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (ClubID) REFERENCES CLUB(ClubID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 

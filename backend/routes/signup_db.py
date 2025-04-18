@@ -35,6 +35,12 @@ def signup():
             INSERT INTO USER (ID, Email, Username, Password)
             VALUES (%s, %s, %s, %s)
         """, (user_id, email, username, password))
+        
+        cursor.execute("""
+            INSERT INTO STUDENT (ID, Points)
+            VALUES (%s, 0)
+        """, (user_id,))
+
 
         connection.commit()
 
