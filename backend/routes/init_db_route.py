@@ -103,6 +103,7 @@ def init_db():
             FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID) ON DELETE SET NULL ON UPDATE CASCADE
         );
+        """)
 
         cursor.execute("""
         CREATE TABLE EVENT_DETAILS (
