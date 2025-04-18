@@ -3,7 +3,6 @@ from backend.config import get_connection
 
 user_bp = Blueprint('user', __name__)
 
-# Route to handle user signup (inserts into USER table)
 @user_bp.route('/api/signup', methods=['POST'])
 def signup():
     try:
@@ -16,6 +15,22 @@ def signup():
         connection = get_connection()
         cursor = connection.cursor()
 
+        # Check if ID already exists
+        cursor.execute("SELECT 1 FROM USER WHERE ID = %s", (user_id,))
+        if cursor.fetchone():
+            return jsonify({"success": False, "message": "ID already exists."}), 400
+
+        # Check if Email already exists
+        cursor.execute("SELECT 1 FROM USER WHERE Email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"success": False, "message": "Email already registered."}), 400
+
+        # Check if Username already exists
+        cursor.execute("SELECT 1 FROM USER WHERE Username = %s", (username,))
+        if cursor.fetchone():
+            return jsonify({"success": False, "message": "Username already taken."}), 400
+
+        # Insert new user
         cursor.execute("""
             INSERT INTO USER (ID, Email, Username, Password)
             VALUES (%s, %s, %s, %s)
@@ -23,7 +38,7 @@ def signup():
 
         connection.commit()
 
-        # 🔽 Fetch the ID of the newly inserted user
+        # Fetch the ID of the newly inserted user
         cursor.execute("SELECT ID FROM USER WHERE Email = %s", (email,))
         inserted_user = cursor.fetchone()
         new_user_id = inserted_user[0] if inserted_user else None
@@ -38,7 +53,8 @@ def signup():
         })
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        return jsonify({"success": False, "error": str(e)}), 500
+    
 
 # Route to display all users in the USER table
 @user_bp.route('/view-users', methods=['GET'])
