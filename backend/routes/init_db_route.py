@@ -9,14 +9,16 @@ def init_db():
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Drop all tables if they exist (you might want to order this properly if foreign key constraints apply)
-        cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
+        # Drop in correct dependency order (child tables first)
         cursor.execute("DROP TABLE IF EXISTS GETS_CLUB;")
         cursor.execute("DROP TABLE IF EXISTS GETS_STUDENT;")
-        cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
+        cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
+        cursor.execute("DROP TABLE IF EXISTS NOTIFICATION_PREFS;")
         cursor.execute("DROP TABLE IF EXISTS NOTIFICATIONS;")
-        cursor.execute("DROP TABLE IF EXISTS FEATURES;")
+        cursor.execute("DROP TABLE IF EXISTS EVENT_DETAILS;")
+        cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
         cursor.execute("DROP TABLE IF EXISTS TIME_SLOT;")
+        cursor.execute("DROP TABLE IF EXISTS FEATURES;")
         cursor.execute("DROP TABLE IF EXISTS COURSE;")
         cursor.execute("DROP TABLE IF EXISTS STUDENT;")
         cursor.execute("DROP TABLE IF EXISTS ADMIN;")
@@ -125,7 +127,7 @@ def init_db():
             Title VARCHAR(255),
             Message TEXT,
             Type ENUM('booking_approved', 'booking_cancelled', 'club_event', 'university_event', 'points_confirmation'),
-            FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 
