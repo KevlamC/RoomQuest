@@ -4,8 +4,8 @@ from .routes.rooms import rooms_bp  # This is now a relative import
 from backend.config import get_connection
 from .routes.test_connection_route import test_connection_bp  # This is also a relative import
 from .routes.init_db_route import init_db_bp  # Import the init_db route
-from .routes.signup_bp import signup_bp
-from .routes.user_list_bp import user_list_bp
+from backend.routes.signup_db import user_bp
+
 
 app = Flask(__name__)  # make sure this comes first!
 CORS(app, origins=["https://yashdhaneshwari.wixsite.com", "http://localhost:5173"], methods=["GET", "POST", "OPTIONS"])
@@ -14,8 +14,7 @@ CORS(app, origins=["https://yashdhaneshwari.wixsite.com", "http://localhost:5173
 app.register_blueprint(rooms_bp, url_prefix="/api/rooms")
 app.register_blueprint(test_connection_bp) 
 app.register_blueprint(init_db_bp)
-app.register_blueprint(signup_bp)
-app.register_blueprint(user_list_bp)
+app.register_blueprint(user_bp)
 
 
 # TEMP: Add health check endpoint directly
