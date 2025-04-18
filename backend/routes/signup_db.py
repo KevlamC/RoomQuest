@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template_string
+from flask import Blueprint, request, jsonify, render_template_string 
 from backend.config import get_connection
 
 user_bp = Blueprint('user', __name__)
@@ -22,10 +22,20 @@ def signup():
         """, (user_id, email, username, password))
 
         connection.commit()
+
+        # 🔽 Fetch the ID of the newly inserted user
+        cursor.execute("SELECT ID FROM USER WHERE Email = %s", (email,))
+        inserted_user = cursor.fetchone()
+        new_user_id = inserted_user[0] if inserted_user else None
+
         cursor.close()
         connection.close()
 
-        return jsonify({"success": True, "message": "User inserted successfully."})
+        return jsonify({
+            "success": True,
+            "message": "User inserted successfully.",
+            "user_id": new_user_id
+        })
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
