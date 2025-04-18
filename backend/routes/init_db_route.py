@@ -80,31 +80,28 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE COURSE (
-            CourseID INT PRIMARY KEY,
-            Name VARCHAR(255) NOT NULL,
-            Date DATE,
-            Hour TIME,
-            Duration INT,
-            Type VARCHAR(255),
-            SessionID INT
+            CourseID INT PRIMARY KEY AUTO_INCREMENT,
+            CourseName VARCHAR(255),
+            SessionID INT,
+            Type ENUM('Lecture', 'Tutorial', 'Lab')
         );
         """)
 
         cursor.execute("""
         CREATE TABLE TIME_SLOT (
-            BookingID INT PRIMARY KEY,
-            UserID INT,
-            Date DATE,
-            Hour TIME,
-            Duration INT,
-            RoomNumber VARCHAR(255),
-            Building VARCHAR(255),
-            BookingType VARCHAR(255),
+            BookingID INT PRIMARY KEY AUTO_INCREMENT,
+            UserID INT NOT NULL,
+            Date DATE NOT NULL,
+            Hour TIME NOT NULL,
+            Duration INT DEFAULT 1,
+            RoomNumber VARCHAR(255) NOT NULL,
+            Building VARCHAR(255) NOT NULL,
+            BookingType ENUM('student', 'club', 'course', 'admin') NOT NULL,
+            CourseID INT DEFAULT NULL,
             FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID) ON DELETE SET NULL ON UPDATE CASCADE
         );
-        """)
 
         cursor.execute("""
         CREATE TABLE NOTIFICATIONS (
