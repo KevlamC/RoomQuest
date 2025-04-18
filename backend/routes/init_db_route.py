@@ -94,18 +94,17 @@ def init_db():
         CREATE TABLE TIME_SLOT (
             BookingID INT PRIMARY KEY,
             UserID INT,
-            AdminID INT,
-            ClubID INT,
             Date DATE,
             Hour TIME,
             Duration INT,
             RoomNumber VARCHAR(255),
             Building VARCHAR(255),
             BookingType VARCHAR(255),
+            FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
                 ON DELETE CASCADE ON UPDATE CASCADE
         );
-        """)
+
 
         cursor.execute("""
         CREATE TABLE NOTIFICATIONS (
@@ -136,8 +135,10 @@ def init_db():
             NotificationID INT,
             ClubID INT,
             PRIMARY KEY (NotificationID, ClubID),
-            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (ClubID) REFERENCES CLUB(ClubID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID)
+                ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES USER(ID)
+                ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 
@@ -148,7 +149,7 @@ def init_db():
             IsExec BOOLEAN,
             PRIMARY KEY (StudentID, ClubID),
             FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (ClubID) REFERENCES CLUB(ClubID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 
