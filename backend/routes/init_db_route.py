@@ -9,42 +9,190 @@ def init_db():
         connection = get_connection()
         cursor = connection.cursor()
 
-        cursor.execute("DROP TABLE IF EXISTS rooms;")
+        # Drop in correct dependency order (child tables first)
+        cursor.execute("DROP TABLE IF EXISTS GETS_CLUB;")
+        cursor.execute("DROP TABLE IF EXISTS GETS_STUDENT;")
+        cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
+        cursor.execute("DROP TABLE IF EXISTS NOTIFICATION_PREFS;")
+        cursor.execute("DROP TABLE IF EXISTS NOTIFICATIONS;")
+        cursor.execute("DROP TABLE IF EXISTS EVENT_DETAILS;")
+        cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
+        cursor.execute("DROP TABLE IF EXISTS TIME_SLOT;")
+        cursor.execute("DROP TABLE IF EXISTS FEATURES;")
+        cursor.execute("DROP TABLE IF EXISTS COURSE;")
+        cursor.execute("DROP TABLE IF EXISTS STUDENT;")
+        cursor.execute("DROP TABLE IF EXISTS ADMIN;")
+        cursor.execute("DROP TABLE IF EXISTS CLUB;")
+        cursor.execute("DROP TABLE IF EXISTS USER;")
+        cursor.execute("DROP TABLE IF EXISTS ROOMS;")
 
-        # --- Example schema ---
+        # Recreate all tables
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS rooms (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            capacity INT NOT NULL
+        CREATE TABLE USER (
+            ID INT PRIMARY KEY,
+            Email VARCHAR(255) UNIQUE NOT NULL,
+            Username VARCHAR(255) UNIQUE NOT NULL,
+            Password VARCHAR(255) NOT NULL,
+            userType ENUM('student', 'admin', 'club') DEFAULT 'student'
         );
         """)
 
-        # Insert test data
-        cursor.execute("INSERT INTO rooms (name, capacity) VALUES ('Room A', 10);")
-        cursor.execute("INSERT INTO rooms (name, capacity) VALUES ('Room B', 20);")
-        cursor.execute("INSERT INTO rooms (name, capacity) VALUES ('Room C', 15);")
+        cursor.execute("""
+        CREATE TABLE ADMIN (
+            ID INT PRIMARY KEY,
+            FOREIGN KEY (ID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE STUDENT (
+            ID INT PRIMARY KEY,
+            Points INT,
+            FOREIGN KEY (ID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE CLUB (
+            ID INT PRIMARY KEY,
+            Points INT,
+            FOREIGN KEY (ID) REFERENCES USER(ID) ON DELETE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE ROOMS (
+            RoomNumber VARCHAR(255),
+            Building VARCHAR(255),
+            Capacity INT,
+            PRIMARY KEY (RoomNumber, Building)
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE FEATURES (
+            RoomNumber VARCHAR(255),
+            Building VARCHAR(255),
+            Feature_Name VARCHAR(255),
+            PRIMARY KEY (RoomNumber, Building, Feature_Name),
+            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building)
+                ON DELETE CASCADE ON UPDATE CASCADE
+        );
+
+        """)
+
+        cursor.execute("""
+        CREATE TABLE COURSE (
+            CourseID INT PRIMARY KEY AUTO_INCREMENT,
+            CourseName VARCHAR(255),
+            SessionID INT,
+            Type ENUM('Lecture', 'Tutorial', 'Lab')
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE TIME_SLOT (
+            BookingID INT PRIMARY KEY AUTO_INCREMENT,
+            UserID INT NOT NULL,
+            Date DATE NOT NULL,
+            Hour TIME NOT NULL,
+            Duration INT DEFAULT 1,
+            RoomNumber VARCHAR(255) NOT NULL,
+            Building VARCHAR(255) NOT NULL,
+            BookingType ENUM('student', 'club', 'course', 'admin', 'university_event') NOT NULL,
+            CourseID INT DEFAULT NULL,
+            IsApproved BOOLEAN DEFAULT FALSE,
+            FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID) ON DELETE SET NULL ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE EVENT_DETAILS (
+          BookingID    INT PRIMARY KEY,
+          EventName    VARCHAR(255) NOT NULL,
+          Description  TEXT          NULL,
+          IsPublic     BOOLEAN       DEFAULT TRUE,
+          Link         VARCHAR(255)  NULL,
+          EventType    ENUM('club', 'university') NOT NULL,
+          FOREIGN KEY (BookingID)    REFERENCES TIME_SLOT(BookingID)
+              ON DELETE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE NOTIFICATIONS (
+            NotificationID INT PRIMARY KEY AUTO_INCREMENT,
+            BookingID INT,
+            Title VARCHAR(255),
+            Message TEXT,
+            Type ENUM('booking_approved', 'booking_cancelled', 'club_event', 'university_event', 'points_confirmation'),
+            FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE NOTIFICATION_PREFS (
+            StudentID INT,
+            ClubID INT,
+            WantsClubNotifications BOOLEAN DEFAULT TRUE,
+            WantsUniversityNotifications BOOLEAN DEFAULT TRUE,
+            PRIMARY KEY (StudentID, ClubID),
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE GETS_STUDENT (
+            NotificationID INT,
+            StudentID INT,
+            PRIMARY KEY (NotificationID, StudentID),
+            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE GETS_CLUB (
+            NotificationID INT,
+            ClubID INT,
+            PRIMARY KEY (NotificationID, ClubID),
+            FOREIGN KEY (NotificationID) REFERENCES NOTIFICATIONS(NotificationID)
+                ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES Club(ID)
+                ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IS_MEMBER (
+            StudentID INT,
+            ClubID INT,
+            IsExec BOOLEAN,
+            PRIMARY KEY (StudentID, ClubID),
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE POINTS_TRANSACTION (
+            TransactionID INT PRIMARY KEY,
+            StudentID INT,
+            PointsChange INT,
+            TransactionDate DATETIME,
+            Description VARCHAR(255),
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
 
         connection.commit()
-        
-        # --- Retrieve and print inserted rows ---
-        cursor.execute("SELECT * FROM rooms;")
-        results = cursor.fetchall()
-        rooms_data = []
-        for row in results:
-            rooms_data.append(f"ID: {row[0]}, Name: {row[1]}, Capacity: {row[2]}")
-        
-        
         cursor.close()
         connection.close()
 
-        # Return results to the browser
-        return jsonify({
-            "message": "Tables created and test data inserted successfully."
-        })
+        return jsonify({"message": "All tables created successfully."})
     
     except Exception as e:
-        return jsonify({
-            "message": "Error occurred",
-            "error": str(e)
-        })
+        return jsonify({"message": "Error occurred", "error": str(e)})
