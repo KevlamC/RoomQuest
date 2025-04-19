@@ -274,8 +274,8 @@ def get_student_reservations():
 
         cursor.execute("""
             SELECT * FROM TIME_SLOT
-            WHERE UserID = %s AND BookingType = 'student'
-        """, (user_id,))
+            WHERE BookingType = 'student'
+        """,)
 
         reservations = cursor.fetchall()
         cursor.close()
@@ -301,8 +301,8 @@ def get_club_reservations():
 
         cursor.execute("""
             SELECT * FROM TIME_SLOT
-            WHERE UserID = %s AND BookingType = 'club'
-        """, (user_id,))
+            WHERE BookingType = 'club'
+        """,)
 
         reservations = cursor.fetchall()
         cursor.close()
