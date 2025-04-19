@@ -331,7 +331,7 @@ def test_timeslot_functions():
 
         # Step 2: Create a test user
         cursor.execute("""
-            INSERT INTO USER (ID, Email, Username, Password, UserType)
+            INSERT INTO USER (ID, Email, Username, Password, userType)
             VALUES ('0', 'testuser@example.com', 'testuser', 'testpass', 'student')
         """)
 
