@@ -12,10 +12,17 @@ from .routes.reservUpcoming import reservUpcoming
 from .routes.notifications import notifs_bp
 from .services.scheduler import scheduler_bp
 from .routes.seed_data import seed_bp
+import os
 
 
 app = Flask(__name__)  # make sure this comes first!
-CORS(app, origins=["https://yashdhaneshwari.wixsite.com", "http://localhost:5173"], methods=["GET", "POST", "OPTIONS"])
+if os.environ.get("FLASK_ENV") == "development":
+    # In dev mode, allow all origins
+    CORS(app, resources={r"/*": {"origins": "*"}})
+else:
+    # In production, only allow frontend
+    CORS(app, origins=["https://yashdhaneshwari.wixsite.com", "http://localhost:5173"], methods=["GET", "POST", "OPTIONS"])
+
 
 # Register blueprints
 app.register_blueprint(rooms_bp, url_prefix="/api/rooms")
@@ -66,6 +73,5 @@ def test_rooms():
 #     return jsonify(dict(os.environ))
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
