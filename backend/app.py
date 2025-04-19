@@ -4,11 +4,7 @@ from .routes.search_rooms import rooms_bp  # This is now a relative import
 from backend.config import get_connection
 from .routes.test_connection_route import test_connection_bp  # This is also a relative import
 from .routes.init_db_route import init_db_bp  # Import the init_db route
-<<<<<<< HEAD
-from .routes.signup_db import signup_bp
-=======
 from .routes.signup_db import user_bp
->>>>>>> bde184670c6268fe4ec950a5ee3e385667077d71
 from .routes.user_list_bp import user_list_bp
 from .routes.eventsUpcoming import eventsUpcoming
 from .routes.points import points
