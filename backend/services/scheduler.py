@@ -261,13 +261,6 @@ def get_available_rooms():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-def serialize_reservation(row):
-    if "Date" in row and isinstance(row["Date"], date):
-        row["Date"] = row["Date"].isoformat()  # Converts to "YYYY-MM-DD"
-    if "Duration" in row and isinstance(row["Duration"], time):
-        row["Duration"] = row["Duration"].strftime("%H:%M:%S")  # Converts to "HH:MM:SS"
-    return row
-
 @scheduler_bp.route("/api/timeslot/student_reservations", methods=["GET"])
 def get_student_reservations():
     try:
@@ -277,9 +270,9 @@ def get_student_reservations():
         cursor.execute("""
             SELECT * FROM TIME_SLOT
             WHERE BookingType = 'student'
-        """)
+        """,)
 
-        reservations = [serialize_reservation(r) for r in cursor.fetchall()]
+        reservations = cursor.fetchall()
         cursor.close()
         connection.close()
 
