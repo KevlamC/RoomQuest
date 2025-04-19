@@ -43,6 +43,7 @@ def search_rooms():
 
             # 3a) Availability: ensure no overlapping booking at (date, hour, duration)
             if date and hour:
+                # Check for overlapping time slots on the given date
                 overlap_sql = """
                     SELECT 1 FROM TIME_SLOT
                     WHERE RoomNumber = %s
@@ -55,7 +56,41 @@ def search_rooms():
                 """
                 cursor.execute(overlap_sql, (rn, bd, date, hour, hour, duration))
                 if cursor.fetchone():
-                    continue  # this room is busy
+                    continue  # room is busy at the requested time
+            
+            elif date:
+                # Define the full day range
+                day_start = '06:00'  # Start of the day (6 AM)
+                day_end = '22:00'    # End of the day (10 PM)
+            
+                # SQL query to find bookings for this room and date
+                date_conflict_sql = """
+                    SELECT Hour, Duration FROM TIME_SLOT
+                    WHERE RoomNumber = %s
+                      AND Building   = %s
+                      AND Date       = %s
+                """
+                cursor.execute(date_conflict_sql, (rn, bd, date))
+                bookings = cursor.fetchall()
+            
+                # Check if bookings overlap the entire day (6 AM to 10 PM)
+                booked_start = None
+                booked_end = None
+            
+                for booking in bookings:
+                    booking_start = booking["Hour"]
+                    booking_end = ADDTIME(booking_start, SEC_TO_TIME(booking["Duration"] * 3600))
+            
+                    # If this is the first booking, initialize the start and end times
+                    if booked_start is None or booking_start < booked_start:
+                        booked_start = booking_start
+                    if booked_end is None or booking_end > booked_end:
+                        booked_end = booking_end
+            
+                # Now check if the bookings cover the entire day range
+                if booked_start <= day_start and booked_end >= day_end:
+                    continue  # Skip this room, it's fully booked for the entire day
+
 
             # 3b) Feature check: room must have *all* requested features
             if features:
