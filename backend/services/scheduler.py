@@ -325,14 +325,13 @@ def test_timeslot_functions():
 
         # Step 2: Create a test user
         cursor.execute("INSERT INTO USER (Name, Email, Password) VALUES ('Test User', 'testuser@example.com', 'testpass')")
-        test_user_id = cursor.lastrowid
 
         # Step 3: Create two bookings for that user
         cursor.execute("""
             INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
-            VALUES (%s, '2025-04-21', '10:00:00', 1, '101', 'Engineering', 'student', NULL, TRUE),
-                   (%s, '2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
-        """, (test_user_id, test_user_id))
+            VALUES ('2', '2025-04-21', '10:00:00', 1, '101', 'Engineering', 'student', NULL, TRUE),
+                   ('2', '2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
+        """,)
 
         # Step 4: Fetch all timeslots
         cursor.execute("SELECT BookingID, RoomNumber, Building, Date, Hour FROM TIME_SLOT")
@@ -346,7 +345,7 @@ def test_timeslot_functions():
         bookings_after_delete = cursor.fetchall()
 
         # Cleanup test user (will also cascade delete remaining bookings)
-        cursor.execute("DELETE FROM USER WHERE ID = %s", (test_user_id,))
+        cursor.execute("DELETE FROM USER WHERE ID = %s", (2,))
 
         connection.commit()
         cursor.close()
