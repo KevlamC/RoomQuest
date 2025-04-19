@@ -320,17 +320,18 @@ def test_timeslot_functions():
         connection = get_connection()
         cursor = connection.cursor()
 
+        cursor.execute("DELETE FROM ROOMS WHERE RoomNumber IN ('104', '102', '103')")
         # Step 1: Create test rooms
         cursor.execute("INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES ('104', 'Engineering', '50'), ('102', 'Science', '20'), ('103', 'Arts', '70')")
 
         # Step 2: Create a test user
-        cursor.execute("INSERT INTO USER (ID, Email, Username, Password, UserType) VALUES ('2', 'testuser@example.com', 'testuser', 'testpass', 'student')")
+        cursor.execute("INSERT INTO USER (Email, Username, Password, UserType) VALUES ('testuser@example.com', 'testuser', 'testpass', 'student')")
 
         # Step 3: Create two bookings for that user
         cursor.execute("""
-            INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
-            VALUES ('2', '2025-04-21', '10:00:00', 1, '104', 'Engineering', 'student', NULL, TRUE),
-                   ('2', '2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
+            INSERT INTO TIME_SLOT (Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
+            VALUES ('2025-04-21', '10:00:00', 1, '104', 'Engineering', 'student', NULL, TRUE),
+                   ('2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
         """,)
 
         # Step 4: Fetch all timeslots
@@ -345,7 +346,7 @@ def test_timeslot_functions():
         bookings_after_delete = cursor.fetchall()
 
         # Cleanup test user (will also cascade delete remaining bookings)
-        cursor.execute("DELETE FROM USER WHERE ID = %s", (2,))
+        cursor.execute("DELETE FROM USER WHERE ID = %s", (0,))
 
         connection.commit()
         cursor.close()
