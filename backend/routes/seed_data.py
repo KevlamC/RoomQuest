@@ -38,7 +38,7 @@ def seed_users(cursor):
         if user["userType"] == "student":
             cursor.execute("INSERT INTO STUDENT (ID, Points) VALUES (%s, 0)", (user["ID"],))
         elif user["userType"] == "club":
-            cursor.execute("INSERT INTO CLUB (ID, ClubName) VALUES (%s, %s)", (user["ID"], user["Username"]))
+            cursor.execute("INSERT INTO CLUB (ID, Points) VALUES (%s, 0)", (user["ID"],))
 
 def seed_rooms_and_features(cursor):
     rooms = [
