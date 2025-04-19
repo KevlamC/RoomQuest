@@ -264,11 +264,6 @@ def get_available_rooms():
 @scheduler_bp.route("/api/timeslot/student_reservations", methods=["GET"])
 def get_student_reservations():
     try:
-        user_id = request.args.get('UserID')
-
-        if not user_id:
-            return jsonify({"success": False, "message": "UserID is required."}), 400
-
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
@@ -291,11 +286,6 @@ def get_student_reservations():
 @scheduler_bp.route("/api/timeslot/club_reservations", methods=["GET"])
 def get_club_reservations():
     try:
-        user_id = request.args.get('UserID')
-
-        if not user_id:
-            return jsonify({"success": False, "message": "UserID (Club) is required."}), 400
-
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
