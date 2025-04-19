@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
+from datetime import timedelta
 
 scheduler_bp = Blueprint("scheduler", __name__)
 
@@ -260,7 +261,12 @@ def get_available_rooms():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-# Get student's timeslots.
+# Helper to convert timedelta into JSON-serializable format
+def serialize_reservation(row):
+    if isinstance(row.get("Duration"), timedelta):
+        row["Duration"] = str(row["Duration"])  # e.g., "1:00:00"
+    return row
+
 @scheduler_bp.route("/api/timeslot/student_reservations", methods=["GET"])
 def get_student_reservations():
     try:
@@ -270,9 +276,11 @@ def get_student_reservations():
         cursor.execute("""
             SELECT * FROM TIME_SLOT
             WHERE BookingType = 'student'
-        """,)
+        """)
 
         reservations = cursor.fetchall()
+        reservations = [serialize_reservation(r) for r in reservations]
+
         cursor.close()
         connection.close()
 
