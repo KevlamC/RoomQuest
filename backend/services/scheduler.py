@@ -321,12 +321,14 @@ def test_timeslot_functions():
         cursor = connection.cursor()
 
         # Step 1: Create test rooms
+        cursor.execute("DELETE FROM ROOMS WHERE RoomNumber IN ('104', '102', '103')")
         cursor.execute("INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES ('104', 'Engineering', '50'), ('102', 'Science', '20'), ('103', 'Arts', '70')")
 
         # Step 2: Create a test user
         cursor.execute("INSERT INTO USER (ID, Email, Username, Password, UserType) VALUES ('0', 'testuser@example.com', 'testuser', 'testpass', 'student')")
 
         # Step 3: Create two bookings for that user
+        cursor.execute("DELETE FROM TIME_SLOT WHERE UserID IN ('0')")
         cursor.execute("""
             INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
             VALUES ('0', '2025-04-21', '10:00:00', 1, '104', 'Engineering', 'student', NULL, TRUE),
