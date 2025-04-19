@@ -29,14 +29,16 @@ def seed_users(cursor):
         {"ID": 4, "Email": "club1@example.com", "Username": "club1", "Password": "password4", "userType": "club"},
         {"ID": 5, "Email": "club2@example.com", "Username": "club2", "Password": "password5", "userType": "club"},
     ]
-
-    cursor.execute("DELETE FROM USER;")
-
     for user in users:
         cursor.execute("""
             INSERT INTO USER (ID, Email, Username, Password, userType)
             VALUES (%s, %s, %s, %s, %s)
         """, (user["ID"], user["Email"], user["Username"], user["Password"], user["userType"]))
+
+        if user["userType"] == "student":
+            cursor.execute("INSERT INTO STUDENT (ID, Points) VALUES (%s, 0)", (user["ID"],))
+        elif user["userType"] == "club":
+            cursor.execute("INSERT INTO CLUB (ID, ClubName) VALUES (%s, %s)", (user["ID"], user["Username"]))
 
 def seed_rooms_and_features(cursor):
     rooms = [
