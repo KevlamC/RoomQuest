@@ -321,10 +321,10 @@ def test_timeslot_functions():
         cursor = connection.cursor()
 
         # Step 1: Create test rooms
-        cursor.execute("INSERT IGNORE INTO ROOMS (RoomNumber, Building, Capacity) VALUES ('101', 'Engineering', '50'), ('102', 'Science', '20'), ('103', 'Arts', '70')")
+        cursor.execute("INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES ('101', 'Engineering', '50'), ('102', 'Science', '20'), ('103', 'Arts', '70')")
 
         # Step 2: Create a test user
-        cursor.execute("INSERT INTO USER (Name, Email, Password) VALUES ('Test User', 'testuser@example.com', 'testpass')")
+        cursor.execute("INSERT INTO USER (ID, Email, Username, Password, UserType) VALUES ('2', 'testuser@example.com', 'testuser', 'testpass', 'student')")
 
         # Step 3: Create two bookings for that user
         cursor.execute("""
