@@ -44,6 +44,18 @@ def init_db():
         );
         """)
 
+        # 1. Making User of type "admin"
+        cursor.execute("""
+            INSERT INTO USER (ID, Email, Username, Password, userType)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (987654321, "admin@university.edu", "admin1", "adminpass123", "admin"))
+        
+        # 2. Connecting that user to "admin" table
+        cursor.execute("""
+            INSERT INTO ADMIN (ID)
+            VALUES (%s)
+        """, (987654321,))
+
         cursor.execute("""
         CREATE TABLE STUDENT (
             ID INT PRIMARY KEY,
