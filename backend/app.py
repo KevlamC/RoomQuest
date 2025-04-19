@@ -28,7 +28,7 @@ app.register_blueprint(points)
 app.register_blueprint(reservUpcoming)
 app.register_blueprint(notifs_bp)
 app.register_blueprint(scheduler_bp)
-app.register_blueprint(seed_bp, url_prefix='/api')
+app.register_blueprint(seed_bp)
 
 
 # TEMP: Add health check endpoint directly
