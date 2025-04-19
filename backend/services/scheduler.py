@@ -321,7 +321,7 @@ def test_timeslot_functions():
         cursor = connection.cursor()
 
         # Step 1: Create test rooms
-        cursor.execute("INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES ('101', 'Engineering', '50'), ('102', 'Science', '20'), ('103', 'Arts', '70')")
+        cursor.execute("INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES ('104', 'Engineering', '50'), ('102', 'Science', '20'), ('103', 'Arts', '70')")
 
         # Step 2: Create a test user
         cursor.execute("INSERT INTO USER (ID, Email, Username, Password, UserType) VALUES ('2', 'testuser@example.com', 'testuser', 'testpass', 'student')")
@@ -329,7 +329,7 @@ def test_timeslot_functions():
         # Step 3: Create two bookings for that user
         cursor.execute("""
             INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
-            VALUES ('2', '2025-04-21', '10:00:00', 1, '101', 'Engineering', 'student', NULL, TRUE),
+            VALUES ('2', '2025-04-21', '10:00:00', 1, '104', 'Engineering', 'student', NULL, TRUE),
                    ('2', '2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
         """,)
 
