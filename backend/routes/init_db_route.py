@@ -64,6 +64,7 @@ def init_db():
         CREATE TABLE ROOMS (
             RoomNumber VARCHAR(255),
             Building VARCHAR(255),
+            Capacity INT,
             PRIMARY KEY (RoomNumber, Building)
         );
         """)
