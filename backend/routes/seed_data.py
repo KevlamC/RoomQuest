@@ -4,7 +4,7 @@ from backend.config import get_connection
 
 seed_bp = Blueprint('seed', __name__)
 
-@seed_bp.route('/seed', methods=['POST'])
+@seed_bp.route('/seed', methods=['GET'])
 def run_seeding():
     conn = get_connection()
     cursor = conn.cursor()
