@@ -312,3 +312,58 @@ def get_club_reservations():
 
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+@scheduler_bp.route("/api/timeslot/test", methods=["GET"])
+def test_timeslot_flow():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Clear existing test entries to avoid duplicates
+        cursor.execute("""
+            DELETE FROM TIME_SLOT
+            WHERE RoomNumber IN ('101', '102') AND Building = 'Engineering'
+        """)
+
+        # 1. Insert two test timeslots
+        test_timeslots = [
+            (1, '2025-04-21', '10:00:00', 1, '101', 'Engineering', 'student', None, True),
+            (2, '2025-04-21', '11:00:00', 1, '102', 'Engineering', 'student', None, True)
+        ]
+
+        for ts in test_timeslots:
+            cursor.execute("""
+                INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, ts)
+
+        connection.commit()
+
+        # 2. Fetch all bookings
+        cursor.execute("SELECT * FROM TIME_SLOT WHERE RoomNumber IN ('101', '102') AND Building = 'Engineering'")
+        initial = cursor.fetchall()
+
+        # 3. Delete one of the test bookings
+        cursor.execute("""
+            DELETE FROM TIME_SLOT
+            WHERE RoomNumber = '101' AND Building = 'Engineering'
+        """)
+        connection.commit()
+
+        # 4. Fetch all bookings again
+        cursor.execute("SELECT * FROM TIME_SLOT WHERE RoomNumber IN ('101', '102') AND Building = 'Engineering'")
+        after_deletion = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "success": True,
+            "initial_bookings": initial,
+            "after_deletion": after_deletion,
+            "message": "Timeslot test completed."
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
