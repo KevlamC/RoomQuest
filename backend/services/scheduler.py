@@ -371,7 +371,7 @@ def test_timeslot_functions():
         bookings_after_delete = [serialize_booking(row) for row in cursor.fetchall()]
 
         # Cleanup test user (will cascade delete other bookings if FK is set up properly)
-        cursor.execute("DELETE FROM USER WHERE ID = %s", (0,))
+        # cursor.execute("DELETE FROM USER WHERE ID = %s", (0,))
 
         connection.commit()
         cursor.close()
