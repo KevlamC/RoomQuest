@@ -315,54 +315,48 @@ def get_club_reservations():
 
 
 @scheduler_bp.route("/api/timeslot/test", methods=["GET"])
-def test_timeslot_flow():
+def test_timeslot_functions():
     try:
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Clear existing test entries to avoid duplicates
+        # Step 1: Create test rooms
+        cursor.execute("INSERT IGNORE INTO ROOMS (RoomNumber, Building) VALUES ('101', 'Engineering'), ('102', 'Science'), ('103', 'Arts')")
+
+        # Step 2: Create a test user
+        cursor.execute("INSERT INTO USER (Name, Email, Password) VALUES ('Test User', 'testuser@example.com', 'testpass')")
+        test_user_id = cursor.lastrowid
+
+        # Step 3: Create two bookings for that user
         cursor.execute("""
-            DELETE FROM TIME_SLOT
-            WHERE RoomNumber IN ('101', '102') AND Building = 'Engineering'
-        """)
+            INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
+            VALUES (%s, '2025-04-21', '10:00:00', 1, '101', 'Engineering', 'student', NULL, TRUE),
+                   (%s, '2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
+        """, (test_user_id, test_user_id))
 
-        # 1. Insert two test timeslots
-        test_timeslots = [
-            (1, '2025-04-21', '10:00:00', 1, '101', 'Engineering', 'student', None, True),
-            (2, '2025-04-21', '11:00:00', 1, '102', 'Engineering', 'student', None, True)
-        ]
+        # Step 4: Fetch all timeslots
+        cursor.execute("SELECT BookingID, RoomNumber, Building, Date, Hour FROM TIME_SLOT")
+        all_bookings = cursor.fetchall()
 
-        for ts in test_timeslots:
-            cursor.execute("""
-                INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, ts)
+        # Step 5: Delete one booking
+        cursor.execute("DELETE FROM TIME_SLOT WHERE RoomNumber = '101' AND Building = 'Engineering' AND Date = '2025-04-21' AND Hour = '10:00:00'")
+
+        # Step 6: Fetch again after deletion
+        cursor.execute("SELECT BookingID, RoomNumber, Building, Date, Hour FROM TIME_SLOT")
+        bookings_after_delete = cursor.fetchall()
+
+        # Cleanup test user (will also cascade delete remaining bookings)
+        cursor.execute("DELETE FROM USER WHERE ID = %s", (test_user_id,))
 
         connection.commit()
-
-        # 2. Fetch all bookings
-        cursor.execute("SELECT * FROM TIME_SLOT WHERE RoomNumber IN ('101', '102') AND Building = 'Engineering'")
-        initial = cursor.fetchall()
-
-        # 3. Delete one of the test bookings
-        cursor.execute("""
-            DELETE FROM TIME_SLOT
-            WHERE RoomNumber = '101' AND Building = 'Engineering'
-        """)
-        connection.commit()
-
-        # 4. Fetch all bookings again
-        cursor.execute("SELECT * FROM TIME_SLOT WHERE RoomNumber IN ('101', '102') AND Building = 'Engineering'")
-        after_deletion = cursor.fetchall()
-
         cursor.close()
         connection.close()
 
         return jsonify({
             "success": True,
-            "initial_bookings": initial,
-            "after_deletion": after_deletion,
-            "message": "Timeslot test completed."
+            "message": "Timeslot test completed.",
+            "before_delete": all_bookings,
+            "after_delete": bookings_after_delete
         }), 200
 
     except Exception as e:
