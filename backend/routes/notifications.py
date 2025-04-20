@@ -7,7 +7,6 @@ notifs_bp = Blueprint("notifications", __name__)
 # Insert a new notification.
 @notifs_bp.route("/api/notifications/new", methods=["GET", "POST"])
 def create_notification():
-    # Use request.args for both GET and POST
     data = request.args
     booking_id = data.get("bookingID")
     title = data.get("title")
@@ -24,13 +23,16 @@ def create_notification():
         conn.commit()
         cursor.close()
         conn.close()
+
         return jsonify({
             "message": "Notification created successfully",
-            "bookingID": booking_id,
-            "title": title,
-            "message": message_r,
-            "type": notif_type
-            }), 201
+            "notification": {
+                "bookingID": booking_id,
+                "title": title,
+                "message": message_r,
+                "type": notif_type
+            }
+        }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -56,13 +58,16 @@ def update_prefs():
         conn.commit()
         cursor.close()
         conn.close()
+
         return jsonify({
             "message": "Preferences updated",
-            "studentID": student_id,
-            "clubID": club_id,
-            "wantsClub": wants_club,
-            "wantsUniversity": wants_uni
-            }), 200
+            "preferences": {
+                "studentID": student_id,
+                "clubID": club_id,
+                "wantsClub": wants_club,
+                "wantsUniversity": wants_uni
+            }
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
