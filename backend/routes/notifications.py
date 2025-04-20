@@ -91,7 +91,7 @@ def get_user_notifications():
 @notifs_bp.route("/api/notifications/general", methods=["GET"])
 def get_general_notifications():
     student_id = request.args.get("studentID")
-
+ 
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
