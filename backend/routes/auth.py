@@ -21,7 +21,7 @@ def login():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT ID, Email, Username, Password FROM USER WHERE Email = %s", (email,))
+        cursor.execute("SELECT ID, Email, Username, Password, userType FROM USER WHERE Email = %s", (email,))
         user = cursor.fetchone()
 
         cursor.close()
@@ -32,7 +32,8 @@ def login():
                 "success": True,
                 "message": "Login successful.",
                 "userId": user["ID"],
-                "username": user["Username"]
+                "username": user["Username"],
+                "usertype": user["userType"]
             }), 200
         else:
             return jsonify({
