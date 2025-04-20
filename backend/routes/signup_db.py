@@ -13,7 +13,7 @@ def signup():
         password = data.get('password')
 
         connection = get_connection()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
 
         # Check if ID already exists
         cursor.execute("SELECT 1 FROM USER WHERE ID = %s", (user_id,))
