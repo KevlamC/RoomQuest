@@ -11,7 +11,7 @@ def create_notification():
     data = request.args
     booking_id = data.get("bookingID")
     title = data.get("title")
-    message = data.get("message")
+    message_r = data.get("message")
     notif_type = data.get("type")
 
     try:
@@ -20,7 +20,7 @@ def create_notification():
         cursor.execute("""
             INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
             VALUES (%s, %s, %s, %s)
-        """, (booking_id, title, message, notif_type))
+        """, (booking_id, title, message_r, notif_type))
         conn.commit()
         cursor.close()
         conn.close()
@@ -28,7 +28,7 @@ def create_notification():
             "message": "Notification created successfully",
             "bookingID": booking_id,
             "title": title,
-            "message": message,
+            "message": message_r,
             "type": notif_type
             }), 201
     except Exception as e:
