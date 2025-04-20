@@ -1,36 +1,73 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, request, jsonify
 from backend.config import get_connection
 
-points = Blueprint("totalPoints", __name__)
+points_bp = Blueprint('points', __name__)
 
-@points.route("/api/user/<int:user_id>/points", methods=["GET"])
-def get_user_points(user_id):
+# 🔹 Get student points
+@points_bp.route('/api/student/points', methods=['GET'])
+def get_student_points():
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
+        user_id = request.args.get("userID")
+        email = request.args.get("email")
 
-        cursor.execute("SELECT userType FROM USER WHERE ID = %s", (user_id,))
-        user = cursor.fetchone()
-        if not user:
-            return jsonify({"error": "User not found"}), 404
+        if not user_id and not email:
+            return jsonify({"success": False, "error": "Must provide userID or email"}), 400
 
-        user_type = user["userType"]
-        if user_type == "student":
-            cursor.execute("SELECT Points FROM STUDENT WHERE ID = %s", (user_id,))
-        elif user_type == "club":
-            cursor.execute("SELECT Points FROM CLUB WHERE ID = %s", (user_id,))
-        else:
-            return jsonify({"userType": user_type})
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
 
-        points = cursor.fetchone()
+        if not user_id:
+            cursor.execute("SELECT ID FROM USER WHERE Email = %s AND userType = 'student'", (email,))
+            result = cursor.fetchone()
+            if not result:
+                return jsonify({"success": False, "error": "Student not found"}), 404
+            user_id = result["ID"]
+
+        cursor.execute("SELECT Points FROM STUDENT WHERE ID = %s", (user_id,))
+        result = cursor.fetchone()
+
         cursor.close()
-        conn.close()
+        connection.close()
 
-        return jsonify({
-            "userId": user_id,
-            "userType": user_type,
-            "points": points["Points"] if points else 0
-        }), 200
+        if result:
+            return jsonify({"success": True, "points": result["Points"]})
+        else:
+            return jsonify({"success": False, "error": "Student not found"}), 404
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# 🔹 Get club points
+@points_bp.route('/api/club/points', methods=['GET'])
+def get_club_points():
+    try:
+        user_id = request.args.get("userID")
+        email = request.args.get("email")
+
+        if not user_id and not email:
+            return jsonify({"success": False, "error": "Must provide userID or email"}), 400
+
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        if not user_id:
+            cursor.execute("SELECT ID FROM USER WHERE Email = %s AND userType = 'club'", (email,))
+            result = cursor.fetchone()
+            if not result:
+                return jsonify({"success": False, "error": "Club not found"}), 404
+            user_id = result["ID"]
+
+        cursor.execute("SELECT Points FROM CLUB WHERE ID = %s", (user_id,))
+        result = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+
+        if result:
+            return jsonify({"success": True, "points": result["Points"]})
+        else:
+            return jsonify({"success": False, "error": "Club not found"}), 404
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
