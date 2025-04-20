@@ -24,7 +24,13 @@ def create_notification():
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Notification created successfully"}), 201
+        return jsonify({
+            "message": "Notification created successfully",
+            "bookingID": booking_id,
+            "title": title,
+            "message": message,
+            "type": notif_type
+            }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -50,7 +56,13 @@ def update_prefs():
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Preferences updated"}), 200
+        return jsonify({
+            "message": "Preferences updated",
+            "studentID": student_id,
+            "clubID": club_id,
+            "wantsClub": wants_club,
+            "wantsUniversity": wants_uni
+            }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
