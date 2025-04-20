@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 notifs_bp = Blueprint("notifications", __name__)
 
 # Insert a new notification.
-@notifs_bp.route("/api/notifications/new", methods=["GET", "POST"])
+@notifs_bp.route("/api/notifications/new", methods=["POST", "GET"])
 def create_notification():
-    data = request.args
-    booking_id = data.get("bookingID")
+    data = request.get_json()
+    booking_id = data.get("bookingid")
     title = data.get("title")
-    message_r = data.get("message")
-    notif_type = data.get("type")
+    message = data.get("message")
+    notif_type = data.get("type")  # 'booking_approved', 'club_event', etc.
 
     try:
         conn = get_connection()
@@ -19,24 +19,22 @@ def create_notification():
         cursor.execute("""
             INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
             VALUES (%s, %s, %s, %s)
-        """, (booking_id, title, message_r, notif_type))
+        """, (booking_id, title, message, notif_type))
         conn.commit()
         cursor.close()
         conn.close()
-
-        return jsonify({
-            "message": "Notification created successfully"}), 201
+        return jsonify({"message": "Notification created successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # Update user notification preferences.
-@notifs_bp.route("/api/notifications/prefs", methods=["GET", "POST"])
+@notifs_bp.route("/api/notifications/prefs", methods=["POST", "GET"])
 def update_prefs():
-    data = request.args
+    data = request.get_json()
     student_id = data.get("studentID")
     club_id = data.get("clubID")
-    wants_club = data.get("wantsClub", "true").lower() == "true"
-    wants_uni = data.get("wantsUniversity", "true").lower() == "true"
+    wants_club = data.get("wantsClub", True)
+    wants_uni = data.get("wantsUniversity", True)
 
     try:
         conn = get_connection()
@@ -51,9 +49,7 @@ def update_prefs():
         conn.commit()
         cursor.close()
         conn.close()
-
-        return jsonify({
-            "message": "Preferences updated"}), 200
+        return jsonify({"message": "Preferences updated"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -82,7 +78,7 @@ def get_user_notifications():
 @notifs_bp.route("/api/notifications/general", methods=["GET"])
 def get_general_notifications():
     student_id = request.args.get("studentID")
- 
+
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -131,11 +127,11 @@ def get_reservation_notifications():
         return jsonify({"error": str(e)}), 500
 
 # Delete a specific notification or clean old ones.
-@notifs_bp.route("/api/notifications/delete", methods=["GET", "POST"])
+@notifs_bp.route("/api/notifications/delete", methods=["POST", "GET"])
 def delete_notification():
-    data = request.args
+    data = request.get_json()
     notif_id = data.get("notificationID")
-    cutoff = data.get("cutoffDate")
+    cutoff = data.get("cutoffDate")  # optional YYYY-MM-DD
 
     try:
         conn = get_connection()
