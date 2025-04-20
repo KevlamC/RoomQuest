@@ -45,18 +45,25 @@ def signup():
         connection.commit()
 
         # Fetch the ID of the newly inserted user
-        cursor.execute("SELECT ID FROM USER WHERE Email = %s", (email,))
+        cursor.execute("SELECT ID, Email, Username, Password, userType FROM USER WHERE Email = %s", (email,))
         inserted_user = cursor.fetchone()
-        new_user_id = inserted_user[0] if inserted_user else None
 
         cursor.close()
         connection.close()
 
-        return jsonify({
-            "success": True,
-            "message": "User inserted successfully.",
-            "user_id": new_user_id
-        })
+        if inserted_user:
+            return jsonify({
+                "success": True,
+                "message": "User inserted successfully.",
+                "user_id": inserted_user["ID"],
+                "username": inserted_user["Username"],
+                "userType": inserted_user["userType"]
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": "User inserted but could not retrieve inserted data."
+            }), 500
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
