@@ -67,6 +67,44 @@ def signup():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# Route to delete a user by ID or Email
+@user_bp.route('/api/delete-user', methods=['POST'])
+def delete_user():
+    try:
+        data = request.get_json()
+        user_id = data.get("userID")
+        email = data.get("email")
+
+        if not user_id and not email:
+            return jsonify({"success": False, "error": "Must provide userID or email"}), 400
+
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Get user ID from email if only email is provided
+        if not user_id and email:
+            cursor.execute("SELECT ID FROM USER WHERE Email = %s", (email,))
+            result = cursor.fetchone()
+            if not result:
+                return jsonify({"success": False, "error": "User not found"}), 404
+            user_id = result[0]
+
+        # Delete the user — will cascade to related tables
+        cursor.execute("DELETE FROM USER WHERE ID = %s", (user_id,))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "success": True,
+            "message": f"User with ID {user_id} deleted successfully."
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
     
 
 # Route to display all users in the USER table (now includes Password)
