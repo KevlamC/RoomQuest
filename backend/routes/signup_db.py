@@ -13,7 +13,7 @@ def signup():
         password = data.get('password')
 
         connection = get_connection()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
 
         # Check if ID already exists
         cursor.execute("SELECT 1 FROM USER WHERE ID = %s", (user_id,))
@@ -69,32 +69,39 @@ def signup():
         return jsonify({"success": False, "error": str(e)}), 500
     
 
-# Route to display all users in the USER table
+# Route to display all users in the USER table (now includes Password)
 @user_bp.route('/view-users', methods=['GET'])
 def view_users():
     try:
         connection = get_connection()
         cursor = connection.cursor()
 
-        cursor.execute("SELECT ID, Email, Username FROM USER")
+        # ✅ Change 1: Include Password in the SELECT
+        cursor.execute("SELECT ID, Email, Username, Password FROM USER")
         users = cursor.fetchall()
 
         cursor.close()
         connection.close()
 
-        # HTML template for displaying users
+        # ✅ Change 2: Add a Password column to the HTML table
         html = """
         <html>
         <head><title>All Users</title></head>
         <body>
             <h2>Registered Users</h2>
             <table border="1">
-                <tr><th>ID</th><th>Email</th><th>Username</th></tr>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Password</th>  <!-- Added header -->
+                </tr>
                 {% for user in users %}
                 <tr>
                     <td>{{ user[0] }}</td>
                     <td>{{ user[1] }}</td>
                     <td>{{ user[2] }}</td>
+                    <td>{{ user[3] }}</td>  <!-- Display password -->
                 </tr>
                 {% endfor %}
             </table>
