@@ -5,13 +5,46 @@ from datetime import datetime, timedelta
 notifs_bp = Blueprint("notifications", __name__)
 
 # Insert a new notification.
-@notifs_bp.route("/api/notifications/new", methods=["POST"])
+@notifs_bp.route("/api/notifications/new", methods=["GET", "POST"])
 def create_notification():
+    if request.method == "GET":
+        # Pull query params if provided
+        booking_id = request.args.get("bookingid")
+        title = request.args.get("title")
+        message = request.args.get("message")
+        notif_type = request.args.get("type")
+
+        if booking_id and title and message and notif_type:
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
+                    VALUES (%s, %s, %s, %s)
+                """, (booking_id, title, message, notif_type))
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return jsonify({
+                    "message": "Notification created via GET!",
+                    "bookingid": booking_id,
+                    "title": title,
+                    "text": message,
+                    "type": notif_type
+                }), 201
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+        else:
+            return jsonify({
+                "message": "Use GET with all query parameters: bookingid, title, message, type."
+            }), 400
+
+    # POST method
     data = request.get_json()
     booking_id = data.get("bookingid")
     title = data.get("title")
     message = data.get("message")
-    notif_type = data.get("type")  # 'booking_approved', 'club_event', etc.
+    notif_type = data.get("type")
 
     try:
         conn = get_connection()
@@ -28,28 +61,56 @@ def create_notification():
         return jsonify({"error": str(e)}), 500
 
 # Update user notification preferences.
-@notifs_bp.route("/api/notifications/prefs", methods=["POST"])
-def update_prefs():
+@notifs_bp.route("/api/notifications/prefs", methods=["GET", "POST"])
+def update_preferences():
+    if request.method == "GET":
+        user_id = request.args.get("userid")
+        notif_type = request.args.get("type")
+        enabled = request.args.get("enabled")
+
+        if user_id and notif_type and enabled:
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO NOTIFICATION_PREFS (UserID, Type, Enabled)
+                    VALUES (%s, %s, %s)
+                    ON DUPLICATE KEY UPDATE Enabled = VALUES(Enabled)
+                """, (user_id, notif_type, enabled))
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return jsonify({
+                    "message": "Preferences updated via GET!",
+                    "userid": user_id,
+                    "type": notif_type,
+                    "enabled": enabled
+                }), 200
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+        else:
+            return jsonify({
+                "message": "Use GET with query params: userid, type, enabled"
+            }), 400
+
+    # POST version
     data = request.get_json()
-    student_id = data.get("studentID")
-    club_id = data.get("clubID")
-    wants_club = data.get("wantsClub", True)
-    wants_uni = data.get("wantsUniversity", True)
+    user_id = data.get("userid")
+    notif_type = data.get("type")
+    enabled = data.get("enabled")
 
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO NOTIFICATION_PREFS (StudentID, ClubID, WantsClubNotifications, WantsUniversityNotifications)
-            VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-              WantsClubNotifications = VALUES(WantsClubNotifications),
-              WantsUniversityNotifications = VALUES(WantsUniversityNotifications)
-        """, (student_id, club_id, wants_club, wants_uni))
+            INSERT INTO NOTIFICATION_PREFS (UserID, Type, Enabled)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE Enabled = VALUES(Enabled)
+        """, (user_id, notif_type, enabled))
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Preferences updated"}), 200
+        return jsonify({"message": "Preferences updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -127,26 +188,39 @@ def get_reservation_notifications():
         return jsonify({"error": str(e)}), 500
 
 # Delete a specific notification or clean old ones.
-@notifs_bp.route("/api/notifications/delete", methods=["POST"])
+@notifs_bp.route("/api/notifications/delete", methods=["GET", "DELETE"])
 def delete_notification():
+    if request.method == "GET":
+        notif_id = request.args.get("id")
+        if notif_id:
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM NOTIFICATIONS WHERE ID = %s", (notif_id,))
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return jsonify({
+                    "message": f"Notification {notif_id} deleted via GET"
+                }), 200
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+        else:
+            return jsonify({
+                "message": "Use GET with query param ?id=<notification_id>"
+            }), 400
+
+    # DELETE version
     data = request.get_json()
-    notif_id = data.get("notificationID")
-    cutoff = data.get("cutoffDate")  # optional YYYY-MM-DD
+    notif_id = data.get("id")
 
     try:
         conn = get_connection()
         cursor = conn.cursor()
-
-        if notif_id:
-            cursor.execute("DELETE FROM NOTIFICATIONS WHERE NotificationID = %s", (notif_id,))
-        elif cutoff:
-            cursor.execute("DELETE FROM NOTIFICATIONS WHERE DATE(BookingID) < %s", (cutoff,))
-        else:
-            return jsonify({"error": "Provide notificationID or cutoffDate"}), 400
-
+        cursor.execute("DELETE FROM NOTIFICATIONS WHERE ID = %s", (notif_id,))
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Notification(s) deleted"}), 200
+        return jsonify({"message": "Notification deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
