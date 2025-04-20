@@ -11,9 +11,11 @@ def search_rooms():
     hour          = request.args.get("hour")               # HH:MM
     duration      = int(request.args.get("duration", 1))   # hours, default 1
     features_q    = request.args.get("features", "")       # comma‑sep list
+    capacity_q    = request.args.get("capacity")           # minimum capacity
 
     # Normalize features into a Python list of lowercase names
     features = [f.strip().lower() for f in features_q.split(",") if f.strip()]
+    required_capacity = int(capacity_q) if capacity_q else None
 
     try:
         conn   = get_connection()
@@ -43,7 +45,6 @@ def search_rooms():
 
             # 3a) Availability: ensure no overlapping booking at (date, hour, duration)
             if date and hour:
-                # Check for overlapping time slots on the given date
                 overlap_sql = """
                     SELECT 1 FROM TIME_SLOT
                     WHERE RoomNumber = %s
@@ -57,13 +58,10 @@ def search_rooms():
                 cursor.execute(overlap_sql, (rn, bd, date, hour, hour, duration))
                 if cursor.fetchone():
                     continue  # room is busy at the requested time
-            
+
             elif date:
-                # Define the full day range
-                day_start = '06:00'  # Start of the day (6 AM)
-                day_end = '22:00'    # End of the day (10 PM)
-            
-                # SQL query to find bookings for this room and date
+                day_start = '06:00'
+                day_end = '22:00'
                 date_conflict_sql = """
                     SELECT Hour, Duration FROM TIME_SLOT
                     WHERE RoomNumber = %s
@@ -72,46 +70,39 @@ def search_rooms():
                 """
                 cursor.execute(date_conflict_sql, (rn, bd, date))
                 bookings = cursor.fetchall()
-            
-                # Check if bookings overlap the entire day (6 AM to 10 PM)
+
                 booked_start = None
                 booked_end = None
-            
+
                 for booking in bookings:
                     booking_start = booking["Hour"]
-                    booking_end = ADDTIME(booking_start, SEC_TO_TIME(booking["Duration"] * 3600))
-            
-                    # If this is the first booking, initialize the start and end times
+                    cursor.execute("SELECT ADDTIME(%s, SEC_TO_TIME(%s * 3600))", (booking_start, booking["Duration"]))
+                    booking_end = cursor.fetchone()["ADDTIME(%s, SEC_TO_TIME(%s * 3600))" % (booking_start, booking["Duration"])]
+
                     if booked_start is None or booking_start < booked_start:
                         booked_start = booking_start
                     if booked_end is None or booking_end > booked_end:
                         booked_end = booking_end
-            
-                # Now check if the bookings cover the entire day range
+
                 if booked_start <= day_start and booked_end >= day_end:
-                    continue  # Skip this room, it's fully booked for the entire day
+                    continue  # fully booked all day
 
+            # 3b) Capacity check
+            if required_capacity is not None and room["Capacity"] < required_capacity:
+                continue
 
-            # 3b) Feature check: room must have *all* requested features
+            # 3c) Feature check: room must have *all* requested features
             if features:
                 cursor.execute(
                     "SELECT Feature_Name FROM FEATURES WHERE RoomNumber = %s AND Building = %s",
                     (rn, bd)
                 )
                 room_feats = {r["Feature_Name"].lower() for r in cursor.fetchall()}
-                
-                # Check for capacity feature
-                capacity_requested = [f for f in features if f.startswith("capacity:")]
-                if capacity_requested:
-                    required_capacity = int(capacity_requested[0].split(":")[1])  # Extract the required capacity
-                    if room["Capacity"] < required_capacity:
-                        continue  # Skip if the room capacity is less than required
-                
-                # Check for other features
+
                 if not all(f in room_feats for f in features):
                     continue
 
-            # 3c) Passed all filters — include full info + its features
+            # 3d) Passed all filters — include full info + its features
             cursor.execute(
                 "SELECT Feature_Name FROM FEATURES WHERE RoomNumber = %s AND Building = %s",
                 (rn, bd)
