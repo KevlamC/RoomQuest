@@ -276,7 +276,7 @@ def get_student_reservations():
 
         # Convert non-serializable fields
         for r in reservations:
-            r["Duration"] = int(r["Duration"])  # Convert to simple integer
+            # r["Duration"] = int(r["Duration"])  # Convert to simple integer
             if isinstance(r.get("Date"), (datetime, date)):
                 r["Date"] = str(r["Date"])
             if isinstance(r.get("Hour"), (datetime, time)):
@@ -307,7 +307,7 @@ def get_club_reservations():
 
         # Convert non-serializable fields
         for r in reservations:
-            r["Duration"] = int(r["Duration"])  # Convert to simple integer
+            # r["Duration"] = int(r["Duration"])  # Convert to simple integer
             if isinstance(r.get("Date"), (datetime, date)):
                 r["Date"] = str(r["Date"])
             if isinstance(r.get("Hour"), (datetime, time)):
