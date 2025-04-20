@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
+from datetime import datetime, timedelta  # <-- Added for time range checks
 
 rooms_bp = Blueprint("rooms", __name__)
 
@@ -60,8 +61,10 @@ def search_rooms():
                     continue  # room is busy at the requested time
 
             elif date:
-                day_start = '06:00'
-                day_end = '22:00'
+                # Python time-based conflict check for full-day booking
+                day_start = datetime.strptime("06:00:00", "%H:%M:%S")
+                day_end = datetime.strptime("22:00:00", "%H:%M:%S")
+
                 date_conflict_sql = """
                     SELECT Hour, Duration FROM TIME_SLOT
                     WHERE RoomNumber = %s
@@ -75,17 +78,17 @@ def search_rooms():
                 booked_end = None
 
                 for booking in bookings:
-                    booking_start = booking["Hour"]
-                    cursor.execute("SELECT ADDTIME(%s, SEC_TO_TIME(%s * 3600))", (booking_start, booking["Duration"]))
-                    booking_end = cursor.fetchone()["ADDTIME(%s, SEC_TO_TIME(%s * 3600))" % (booking_start, booking["Duration"])]
+                    booking_start = datetime.strptime(str(booking["Hour"]), "%H:%M:%S")
+                    booking_end = booking_start + timedelta(hours=booking["Duration"])
 
                     if booked_start is None or booking_start < booked_start:
                         booked_start = booking_start
                     if booked_end is None or booking_end > booked_end:
                         booked_end = booking_end
 
-                if booked_start <= day_start and booked_end >= day_end:
-                    continue  # fully booked all day
+                if booked_start and booked_end:
+                    if booked_start <= day_start and booked_end >= day_end:
+                        continue  # fully booked all day
 
             # 3b) Capacity check
             if required_capacity is not None and room["Capacity"] < required_capacity:
