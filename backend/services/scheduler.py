@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
-from datetime import date, time
+from datetime import datetime, date, time, timedelta
 
 scheduler_bp = Blueprint("scheduler", __name__)
 
@@ -270,9 +270,19 @@ def get_student_reservations():
         cursor.execute("""
             SELECT * FROM TIME_SLOT
             WHERE BookingType = 'student'
-        """,)
+        """)
 
         reservations = cursor.fetchall()
+
+        # Fix: Make Duration, Date, Hour JSON serializable
+        for r in reservations:
+            if isinstance(r.get("Duration"), timedelta):
+                r["Duration"] = str(r["Duration"])
+            if isinstance(r.get("Date"), (datetime, date)):
+                r["Date"] = str(r["Date"])
+            if isinstance(r.get("Hour"), (datetime, time)):
+                r["Hour"] = str(r["Hour"])
+
         cursor.close()
         connection.close()
 
@@ -292,9 +302,19 @@ def get_club_reservations():
         cursor.execute("""
             SELECT * FROM TIME_SLOT
             WHERE BookingType = 'club'
-        """,)
+        """)
 
         reservations = cursor.fetchall()
+
+        # Fix: Make Duration, Date, Hour JSON serializable
+        for r in reservations:
+            if isinstance(r.get("Duration"), timedelta):
+                r["Duration"] = str(r["Duration"])
+            if isinstance(r.get("Date"), (datetime, date)):
+                r["Date"] = str(r["Date"])
+            if isinstance(r.get("Hour"), (datetime, time)):
+                r["Hour"] = str(r["Hour"])
+
         cursor.close()
         connection.close()
 
