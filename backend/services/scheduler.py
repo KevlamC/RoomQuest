@@ -267,20 +267,21 @@ def get_student_reservations():
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        cursor.execute("""
-            SELECT * FROM TIME_SLOT
-            WHERE BookingType = 'student'
-        """)
+        def serialize_booking(row):
+            return {
+                "BookingID": row[0],
+                "UserID": row[1],
+                "Date": str(row[2]),
+                "Hour": str(row[3]),
+                "Duration": row[4],
+                "RoomNumber": row[5],
+                "Building": str(row[6]),
+                "BookingType": str(row[7])
+            }
 
-        reservations = cursor.fetchall()
-
-        # Convert non-serializable fields
-        for r in reservations:
-            # r["Duration"] = int(r["Duration"])  # Convert to simple integer
-            if isinstance(r.get("Date"), (datetime, date)):
-                r["Date"] = str(r["Date"])
-            if isinstance(r.get("Hour"), (datetime, time)):
-                r["Hour"] = str(r["Hour"])
+        # Step 4: Fetch all timeslots
+        cursor.execute("SELECT * FROM TIME_SLOT WHERE BookingType = 'student'")
+        reservations = [serialize_booking(row) for row in cursor.fetchall()]
 
         cursor.close()
         connection.close()
@@ -298,20 +299,21 @@ def get_club_reservations():
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        cursor.execute("""
-            SELECT * FROM TIME_SLOT
-            WHERE BookingType = 'club'
-        """)
+        def serialize_booking(row):
+            return {
+                "BookingID": row[0],
+                "UserID": row[1],
+                "Date": str(row[2]),
+                "Hour": str(row[3]),
+                "Duration": row[4],
+                "RoomNumber": row[5],
+                "Building": str(row[6]),
+                "BookingType": str(row[7])
+            }
 
-        reservations = cursor.fetchall()
-
-        # Convert non-serializable fields
-        for r in reservations:
-            # r["Duration"] = int(r["Duration"])  # Convert to simple integer
-            if isinstance(r.get("Date"), (datetime, date)):
-                r["Date"] = str(r["Date"])
-            if isinstance(r.get("Hour"), (datetime, time)):
-                r["Hour"] = str(r["Hour"])
+        # Step 4: Fetch all timeslots
+        cursor.execute("SELECT * FROM TIME_SLOT WHERE BookingType = 'club'")
+        reservations = [serialize_booking(row) for row in cursor.fetchall()]
 
         cursor.close()
         connection.close()
@@ -355,14 +357,17 @@ def test_timeslot_functions():
         def serialize_booking(row):
             return {
                 "BookingID": row[0],
-                "RoomNumber": row[1],
-                "Building": row[2],
-                "Date": str(row[3]),
-                "Hour": str(row[4])
+                "UserID": row[1],
+                "Date": str(row[2]),
+                "Hour": str(row[3]),
+                "Duration": row[4],
+                "RoomNumber": row[5],
+                "Building": str(row[6]),
+                "BookingType": str(row[7])
             }
 
         # Step 4: Fetch all timeslots
-        cursor.execute("SELECT BookingID, RoomNumber, Building, Date, Hour FROM TIME_SLOT")
+        cursor.execute("SELECT * FROM TIME_SLOT")
         all_bookings = [serialize_booking(row) for row in cursor.fetchall()]
 
         # Step 5: Delete one booking
@@ -375,7 +380,7 @@ def test_timeslot_functions():
         """)
 
         # Step 6: Fetch again after deletion
-        cursor.execute("SELECT BookingID, RoomNumber, Building, Date, Hour FROM TIME_SLOT")
+        cursor.execute("SELECT * FROM TIME_SLOT")
         bookings_after_delete = [serialize_booking(row) for row in cursor.fetchall()]
 
         # Cleanup test user (will cascade delete other bookings if FK is set up properly)
