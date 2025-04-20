@@ -330,7 +330,7 @@ def test_timeslot_functions():
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Step 1: Create test rooms
+        # Step 1: Create test rooms.
         cursor.execute("DELETE FROM ROOMS WHERE RoomNumber IN ('104', '102', '103')")
         cursor.execute("""
             INSERT INTO ROOMS (RoomNumber, Building, Capacity)
@@ -339,13 +339,13 @@ def test_timeslot_functions():
                    ('103', 'Arts', '70')
         """)
 
-        # Step 2: Create a test user
+        # Step 2: Create a test user.
         cursor.execute("""
             INSERT INTO USER (ID, Email, Username, Password, userType)
             VALUES ('0', 'testuser@example.com', 'testuser', 'testpass', 'student')
         """)
 
-        # Step 3: Create two bookings for that user
+        # Step 3: Create two bookings for that user.
         cursor.execute("DELETE FROM TIME_SLOT WHERE UserID = '0'")
         cursor.execute("""
             INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
@@ -353,7 +353,7 @@ def test_timeslot_functions():
                    ('0', '2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
         """)
 
-        # Helper to convert row to serializable dict
+        # Helper to convert row to serializable dict.
         def serialize_booking(row):
             return {
                 "BookingID": row[0],
@@ -366,11 +366,11 @@ def test_timeslot_functions():
                 "BookingType": str(row[7])
             }
 
-        # Step 4: Fetch all timeslots
+        # Step 4: Fetch all timeslots.
         cursor.execute("SELECT * FROM TIME_SLOT")
         all_bookings = [serialize_booking(row) for row in cursor.fetchall()]
 
-        # Step 5: Delete one booking
+        # Step 5: Delete one booking.
         cursor.execute("""
             DELETE FROM TIME_SLOT
             WHERE RoomNumber = '104'
@@ -379,11 +379,11 @@ def test_timeslot_functions():
               AND Hour = '10:00:00'
         """)
 
-        # Step 6: Fetch again after deletion
+        # Step 6: Fetch again after deletion.
         cursor.execute("SELECT * FROM TIME_SLOT")
         bookings_after_delete = [serialize_booking(row) for row in cursor.fetchall()]
 
-        # Cleanup test user (will cascade delete other bookings if FK is set up properly)
+        # Cleanup test user (will cascade delete other bookings if FK is set up properly).
         # cursor.execute("DELETE FROM USER WHERE ID = %s", (0,))
 
         connection.commit()
