@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
-from datetime import datetime, date, time, timedelta
 
 scheduler_bp = Blueprint("scheduler", __name__)
 
@@ -260,12 +259,6 @@ def get_available_rooms():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-
-from flask import jsonify, request, Blueprint
-from datetime import date, time, timedelta, datetime
-from backend.config import get_connection
-
-scheduler_bp = Blueprint("scheduler", __name__)
 
 def serialize_booking_dict(row):
     return {
