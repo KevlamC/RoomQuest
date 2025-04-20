@@ -274,10 +274,9 @@ def get_student_reservations():
 
         reservations = cursor.fetchall()
 
-        # Fix: Make Duration, Date, Hour JSON serializable
+        # Convert non-serializable fields
         for r in reservations:
-            if isinstance(r.get("Duration"), timedelta):
-                r["Duration"] = str(r["Duration"])
+            r["Duration"] = int(r["Duration"])  # Convert to simple integer
             if isinstance(r.get("Date"), (datetime, date)):
                 r["Date"] = str(r["Date"])
             if isinstance(r.get("Hour"), (datetime, time)):
@@ -306,10 +305,9 @@ def get_club_reservations():
 
         reservations = cursor.fetchall()
 
-        # Fix: Make Duration, Date, Hour JSON serializable
+        # Convert non-serializable fields
         for r in reservations:
-            if isinstance(r.get("Duration"), timedelta):
-                r["Duration"] = str(r["Duration"])
+            r["Duration"] = int(r["Duration"])  # Convert to simple integer
             if isinstance(r.get("Date"), (datetime, date)):
                 r["Date"] = str(r["Date"])
             if isinstance(r.get("Hour"), (datetime, time)):
