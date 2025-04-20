@@ -12,6 +12,7 @@ from .routes.reservUpcoming import reservUpcoming
 from .routes.notifications import notifs_bp
 from .services.scheduler import scheduler_bp
 from .routes.seed_data import seed_bp
+from .routes.auth import auth_bp
 import os
 
 
@@ -36,6 +37,7 @@ app.register_blueprint(reservUpcoming)
 app.register_blueprint(notifs_bp)
 app.register_blueprint(scheduler_bp)
 app.register_blueprint(seed_bp)
+app.register_blueprint(auth_bp)
 
 
 # TEMP: Add health check endpoint directly
