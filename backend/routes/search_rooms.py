@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # <-- Added for time range checks
 
 rooms_bp = Blueprint("rooms", __name__)
 
@@ -11,35 +11,26 @@ def search_rooms():
     date          = request.args.get("date")               # YYYY‑MM‑DD
     hour          = request.args.get("hour")               # HH:MM
     duration      = int(request.args.get("duration", 1))   # hours, default 1
-    features_q    = request.args.get("features", "")     # comma‑sep list
+    features_q    = request.args.get("features", "")       # comma‑sep list
     capacity_q    = request.args.get("capacity")           # minimum capacity
 
-    # Normalize features and capacity
+    # Normalize features into a Python list of lowercase names
     features = [f.strip().lower() for f in features_q.split(",") if f.strip()]
     required_capacity = int(capacity_q) if capacity_q else None
-
-    # Precompute requested start/end times (as HH:MM:SS strings)
-    requested_start = requested_end = None
-    if date and hour:
-        # ensure seconds and compute end
-        requested_start = datetime.strptime(hour, "%H:%M").time().strftime("%H:%M:%S")
-        dt0 = datetime.strptime(f"{date} {requested_start}", "%Y-%m-%d %H:%M:%S")
-        requested_end = (dt0 + timedelta(hours=duration)).time().strftime("%H:%M:%S")
 
     try:
         conn   = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 2) Build base ROOM query (only building & capacity here)
-        sql    = "SELECT RoomNumber, Building, Capacity FROM ROOMS"
-        cond   = []
+        # 2) Build base ROOM query with building filters
+        sql  = "SELECT RoomNumber, Building, Capacity FROM ROOMS"
+        cond = []
         params = []
+
         if building:
             cond.append("Building = %s")
             params.append(building)
-        if required_capacity is not None:
-            cond.append("Capacity >= %s")
-            params.append(required_capacity)
+
         if cond:
             sql += " WHERE " + " AND ".join(cond)
 
@@ -48,66 +39,73 @@ def search_rooms():
 
         available = []
 
-        # 3) For each room, check availability and features
+        # 3) For each candidate room, test availability and feature‑matching
         for room in rooms:
             rn = room["RoomNumber"]
             bd = room["Building"]
 
-            # 3a) Time-slot overlap check
+            # 3a) Availability: ensure no overlapping booking at (date, hour, duration)
             if date and hour:
                 overlap_sql = """
-                    SELECT 1
-                      FROM TIME_SLOT t
-                     WHERE t.RoomNumber = %s
-                       AND t.Building   = %s
-                       AND t.Date       = %s
-                       AND t.Hour < ADDTIME(%s, SEC_TO_TIME(%s*3600))
-                       AND ADDTIME(t.Hour, SEC_TO_TIME(t.Duration*3600)) > %s
+                    SELECT 1 FROM TIME_SLOT
+                    WHERE RoomNumber = %s
+                      AND Building   = %s
+                      AND Date       = %s
+                      AND NOT (
+                        ADDTIME(Hour, SEC_TO_TIME(Duration*3600)) <= %s
+                        OR Hour >= ADDTIME(%s, SEC_TO_TIME(%s*3600))
+                      )
                 """
-                cursor.execute(overlap_sql, (
-                    rn, bd, date,
-                    requested_end, duration,
-                    requested_start
-                ))
+                cursor.execute(overlap_sql, (rn, bd, date, hour, hour, duration))
                 if cursor.fetchone():
-                    continue  # busy
+                    continue  # room is busy at the requested time
 
             elif date:
-                # existing full-day logic (if needed)
+                # Python time-based conflict check for full-day booking
                 day_start = datetime.strptime("06:00:00", "%H:%M:%S")
-                day_end   = datetime.strptime("22:00:00", "%H:%M:%S")
-                cursor.execute(
-                    """
+                day_end = datetime.strptime("22:00:00", "%H:%M:%S")
+
+                date_conflict_sql = """
                     SELECT Hour, Duration FROM TIME_SLOT
-                     WHERE RoomNumber = %s
-                       AND Building   = %s
-                       AND Date       = %s
-                    """, (rn, bd, date)
-                )
+                    WHERE RoomNumber = %s
+                      AND Building   = %s
+                      AND Date       = %s
+                """
+                cursor.execute(date_conflict_sql, (rn, bd, date))
                 bookings = cursor.fetchall()
-                booked_start = booked_end = None
-                for bk in bookings:
-                    bs = datetime.strptime(str(bk["Hour"]), "%H:%M:%S")
-                    be = bs + timedelta(hours=bk["Duration"])
-                    if booked_start is None or bs < booked_start:
-                        booked_start = bs
-                    if booked_end is None or be > booked_end:
-                        booked_end = be
+
+                booked_start = None
+                booked_end = None
+
+                for booking in bookings:
+                    booking_start = datetime.strptime(str(booking["Hour"]), "%H:%M:%S")
+                    booking_end = booking_start + timedelta(hours=booking["Duration"])
+
+                    if booked_start is None or booking_start < booked_start:
+                        booked_start = booking_start
+                    if booked_end is None or booking_end > booked_end:
+                        booked_end = booking_end
+
                 if booked_start and booked_end:
                     if booked_start <= day_start and booked_end >= day_end:
-                        continue  # fully booked
+                        continue  # fully booked all day
 
-            # 3b) Feature check
+            # 3b) Capacity check
+            if required_capacity is not None and room["Capacity"] < required_capacity:
+                continue
+
+            # 3c) Feature check: room must have *all* requested features
             if features:
                 cursor.execute(
                     "SELECT Feature_Name FROM FEATURES WHERE RoomNumber = %s AND Building = %s",
                     (rn, bd)
                 )
                 room_feats = {r["Feature_Name"].lower() for r in cursor.fetchall()}
+
                 if not all(f in room_feats for f in features):
                     continue
 
-            # 3c) Passed all filters — collect info
+            # 3d) Passed all filters — include full info + its features
             cursor.execute(
                 "SELECT Feature_Name FROM FEATURES WHERE RoomNumber = %s AND Building = %s",
                 (rn, bd)
@@ -116,9 +114,9 @@ def search_rooms():
 
             available.append({
                 "roomNumber": rn,
-                "building":   bd,
-                "capacity":   room.get("Capacity"),
-                "features":   feats_list
+                "building": bd,
+                "capacity": room.get("Capacity"),
+                "features": feats_list
             })
 
         cursor.close()
@@ -131,6 +129,7 @@ def search_rooms():
 
 @rooms_bp.route("/test", methods=["GET"])
 def test_rooms():
+    """Simple endpoint: returns all rooms (no filters)."""
     try:
         conn   = get_connection()
         cursor = conn.cursor(dictionary=True)
