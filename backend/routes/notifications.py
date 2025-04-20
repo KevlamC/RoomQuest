@@ -5,13 +5,14 @@ from datetime import datetime, timedelta
 notifs_bp = Blueprint("notifications", __name__)
 
 # Insert a new notification.
-@notifs_bp.route("/api/notifications/new", methods=["POST", "GET"])
+@notifs_bp.route("/api/notifications/new", methods=["GET", "POST"])
 def create_notification():
-    data = request.get_json()
-    booking_id = data.get("bookingid")
+    # Use request.args for both GET and POST
+    data = request.args
+    booking_id = data.get("bookingID")
     title = data.get("title")
     message = data.get("message")
-    notif_type = data.get("type")  # 'booking_approved', 'club_event', etc.
+    notif_type = data.get("type")
 
     try:
         conn = get_connection()
@@ -28,13 +29,13 @@ def create_notification():
         return jsonify({"error": str(e)}), 500
 
 # Update user notification preferences.
-@notifs_bp.route("/api/notifications/prefs", methods=["POST", "GET"])
+@notifs_bp.route("/api/notifications/prefs", methods=["GET", "POST"])
 def update_prefs():
-    data = request.get_json()
+    data = request.args
     student_id = data.get("studentID")
     club_id = data.get("clubID")
-    wants_club = data.get("wantsClub", True)
-    wants_uni = data.get("wantsUniversity", True)
+    wants_club = data.get("wantsClub", "true").lower() == "true"
+    wants_uni = data.get("wantsUniversity", "true").lower() == "true"
 
     try:
         conn = get_connection()
@@ -127,11 +128,11 @@ def get_reservation_notifications():
         return jsonify({"error": str(e)}), 500
 
 # Delete a specific notification or clean old ones.
-@notifs_bp.route("/api/notifications/delete", methods=["POST", "GET"])
+@notifs_bp.route("/api/notifications/delete", methods=["GET", "POST"])
 def delete_notification():
-    data = request.get_json()
+    data = request.args
     notif_id = data.get("notificationID")
-    cutoff = data.get("cutoffDate")  # optional YYYY-MM-DD
+    cutoff = data.get("cutoffDate")
 
     try:
         conn = get_connection()
