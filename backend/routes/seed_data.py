@@ -121,7 +121,7 @@ def seed_timeslots(cursor):
             "Hour": "19:00",
             "Duration": 1,
             "RoomNumber": "606",
-            "Building": "Business",
+            "Building": "Medicine",
             "BookingType": "club",
             "CourseID": None,
             "IsApproved": False
@@ -132,7 +132,7 @@ def seed_timeslots(cursor):
             "Hour": "19:00",
             "Duration": 1,
             "RoomNumber": "100A",
-            "Building": "Arts",
+            "Building": "Commerce",
             "BookingType": "student",
             "CourseID": None,
             "IsApproved": True
