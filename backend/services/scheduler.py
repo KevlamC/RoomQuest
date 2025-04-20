@@ -342,15 +342,15 @@ def test_timeslot_functions():
         # Step 2: Create a test user.
         cursor.execute("""
             INSERT INTO USER (ID, Email, Username, Password, userType)
-            VALUES ('0', 'testuser@example.com', 'testuser', 'testpass', 'student')
+            VALUES ('0', 'testuser@example.com', 'testuser', 'testpass', 'club')
         """)
 
         # Step 3: Create two bookings for that user.
         cursor.execute("DELETE FROM TIME_SLOT WHERE UserID = '0'")
         cursor.execute("""
             INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
-            VALUES ('0', '2025-04-21', '10:00:00', 1, '104', 'Engineering', 'student', NULL, TRUE),
-                   ('0', '2025-04-21', '11:00:00', 1, '102', 'Science', 'student', NULL, TRUE)
+            VALUES ('0', '2025-04-21', '10:00:00', 1, '104', 'Engineering', 'club', NULL, TRUE),
+                   ('0', '2025-04-21', '11:00:00', 1, '102', 'Science', 'club', NULL, TRUE)
         """)
 
         # Helper to convert row to serializable dict.
