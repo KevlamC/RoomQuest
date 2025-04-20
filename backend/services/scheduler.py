@@ -261,67 +261,59 @@ def get_available_rooms():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+from flask import jsonify, request, Blueprint
+from datetime import date, time, timedelta, datetime
+from backend.config import get_connection
+
+scheduler_bp = Blueprint("scheduler", __name__)
+
+def serialize_booking_dict(row):
+    return {
+        "BookingID":     row["BookingID"],
+        "UserID":        row["UserID"],
+        "Date":          str(row["Date"]),
+        "Hour":          str(row["Hour"]),
+        "Duration":      row["Duration"],           # INT, already serializable
+        "RoomNumber":    row["RoomNumber"],
+        "Building":      row["Building"],
+        "BookingType":   row["BookingType"],
+        "CourseID":      str(row.get("CourseID")),       # might be None
+        "IsApproved":    bool(row["IsApproved"]),   # MySQL returns 0/1
+    }
+
 @scheduler_bp.route("/api/timeslot/student_reservations", methods=["GET"])
 def get_student_reservations():
     try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM TIME_SLOT WHERE BookingType='student'")
+        raw = cur.fetchall()
+        cur.close()
+        conn.close()
 
-        def serialize_booking(row):
-            return {
-                "BookingID": row[0],
-                "UserID": row[1],
-                "Date": str(row[2]),
-                "Hour": str(row[3]),
-                "Duration": row[4],
-                "RoomNumber": row[5],
-                "Building": str(row[6]),
-                "BookingType": str(row[7])
-            }
-
-        # Step 4: Fetch all timeslots
-        cursor.execute("SELECT * FROM TIME_SLOT WHERE BookingType = 'student'")
-        reservations = [serialize_booking(row) for row in cursor.fetchall()]
-
-        cursor.close()
-        connection.close()
-
+        reservations = [serialize_booking_dict(r) for r in raw]
         return jsonify({"success": True, "reservations": reservations}), 200
 
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-# Get club's timeslots.
 @scheduler_bp.route("/api/timeslot/club_reservations", methods=["GET"])
 def get_club_reservations():
     try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM TIME_SLOT WHERE BookingType='club'")
+        raw = cur.fetchall()
+        cur.close()
+        conn.close()
 
-        def serialize_booking(row):
-            return {
-                "BookingID": row[0],
-                "UserID": row[1],
-                "Date": str(row[2]),
-                "Hour": str(row[3]),
-                "Duration": row[4],
-                "RoomNumber": row[5],
-                "Building": str(row[6]),
-                "BookingType": str(row[7])
-            }
-
-        # Step 4: Fetch all timeslots
-        cursor.execute("SELECT * FROM TIME_SLOT WHERE BookingType = 'club'")
-        reservations = [serialize_booking(row) for row in cursor.fetchall()]
-
-        cursor.close()
-        connection.close()
-
+        reservations = [serialize_booking_dict(r) for r in raw]
         return jsonify({"success": True, "reservations": reservations}), 200
 
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
 
 
 @scheduler_bp.route("/api/timeslot/test", methods=["GET"])
