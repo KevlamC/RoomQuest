@@ -33,7 +33,7 @@ def login():
                 "message": "Login successful.",
                 "userId": user["ID"],
                 "username": user["Username"],
-                "usertype": user["userType"]
+                "userType": user["userType"]
             }), 200
         else:
             return jsonify({
