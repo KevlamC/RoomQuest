@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
+from datetime import datetime, timedelta
 
 scheduler_bp = Blueprint("scheduler", __name__)
 
@@ -193,6 +194,8 @@ def delete_timeslot_by_admin():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+START_HOUR = 6
+END_HOUR = 22  # 10 PM, so last slot starts at 9 PM (21)
 
 # Get a room's schedule (list of timeslots) for specified date and time.
 @scheduler_bp.route("/api/timeslot/room_schedule", methods=["GET"])
@@ -201,25 +204,39 @@ def get_room_schedule():
         room_number = request.args.get('RoomNumber')
         building = request.args.get('Building')
         date = request.args.get('Date')
-        hour = request.args.get('Hour')
 
-        if not room_number or not building or not date or not hour:
+        if not room_number or not building or not date:
             return jsonify({"success": False, "message": "Missing required query parameters."}), 400
 
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Updated query to fit the new timeslot table.
+        # Fetch all bookings for the room on that date
         cursor.execute("""
-            SELECT * FROM TIME_SLOT
-            WHERE RoomNumber = %s AND Building = %s AND Date = %s AND Hour = %s
-        """, (room_number, building, date, hour))
+            SELECT Hour, Duration FROM TIME_SLOT
+            WHERE RoomNumber = %s AND Building = %s AND Date = %s
+        """, (room_number, building, date))
 
-        timeslots = cursor.fetchall()
+        bookings = cursor.fetchall()
         cursor.close()
         connection.close()
 
-        return jsonify({"success": True, "timeslots": timeslots}), 200
+        # Create a set of all booked hours
+        unavailable_hours = set()
+        for booking in bookings:
+            start_time = datetime.strptime(str(booking["Hour"]), "%H:%M:%S")
+            duration = booking["Duration"]
+            for i in range(duration):
+                booked_hour = (start_time + timedelta(hours=i)).hour
+                unavailable_hours.add(booked_hour)
+
+        # Generate the list of available hours (6 AM to 9 PM inclusive)
+        available_hours = [
+            f"{hour:02}:00" for hour in range(START_HOUR, END_HOUR)
+            if hour not in unavailable_hours
+        ]
+
+        return jsonify({"success": True, "available_hours": available_hours}), 200
 
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
