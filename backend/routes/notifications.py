@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
-from datetime import datetime, timedelta
+from datetime import datetime
 
 notifs_bp = Blueprint("notifications", __name__)
 
@@ -38,11 +38,15 @@ def create_notification():
 # Update user notification preferences.
 @notifs_bp.route("/api/notifications/prefs", methods=["POST", "GET"])
 def update_prefs():
+    # Handles both JSON (POST) and query parameters (GET or POST with ?...)
     data = request.get_json(silent=True) or request.args
+
     student_id = data.get("studentID")
     club_id = data.get("clubID")
-    wants_club = data.get("wantsClub", True)
-    wants_uni = data.get("wantsUniversity", True)
+
+    # Convert string "true"/"false" to proper boolean
+    wants_club = str(data.get("wantsClub", "true")).lower() == "true"
+    wants_uni = str(data.get("wantsUniversity", "true")).lower() == "true"
 
     try:
         conn = get_connection()
@@ -53,7 +57,7 @@ def update_prefs():
             ON DUPLICATE KEY UPDATE
               WantsClubNotifications = VALUES(WantsClubNotifications),
               WantsUniversityNotifications = VALUES(WantsUniversityNotifications)
-        """, (student_id, club_id, wants_club, wants_uni))
+        """, (student_id, club_id, int(wants_club), int(wants_uni)))
         conn.commit()
         cursor.close()
         conn.close()
