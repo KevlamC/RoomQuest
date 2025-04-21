@@ -15,14 +15,49 @@ def create_notification():
 
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+
+        # Step 1: Insert notification
         cursor.execute("""
             INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
             VALUES (%s, %s, %s, %s)
         """, (booking_id, title, message_r, notif_type))
+        notification_id = cursor.lastrowid
+
+        # Step 2: If club_event, distribute to opted-in members
+        if notif_type == "club_event":
+            # Get ClubID from EVENT_DETAILS
+            cursor.execute("""
+                SELECT ClubID FROM EVENT_DETAILS WHERE BookingID = %s
+            """, (booking_id,))
+            club_row = cursor.fetchone()
+
+            if club_row:
+                club_id = club_row["ClubID"]
+
+                # Get all StudentIDs who are members AND want notifications (or have no preference set)
+                cursor.execute("""
+                    SELECT im.StudentID
+                    FROM IS_MEMBER im
+                    LEFT JOIN NOTIFICATION_PREFS np 
+                      ON im.StudentID = np.StudentID AND np.ClubID = %s
+                    WHERE im.ClubID = %s
+                      AND (np.WantsClubNotifications IS NULL OR np.WantsClubNotifications = TRUE)
+                """, (club_id, club_id))
+                student_rows = cursor.fetchall()
+
+                # Bulk insert into GETS_STUDENT
+                if student_rows:
+                    values = [(notification_id, row["StudentID"]) for row in student_rows]
+                    cursor.executemany("""
+                        INSERT INTO GETS_STUDENT (NotificationID, StudentID)
+                        VALUES (%s, %s)
+                    """, values)
+
         conn.commit()
         cursor.close()
         conn.close()
+
         return jsonify({
             "message": "Notification created successfully",
             "notification": {
@@ -32,6 +67,7 @@ def create_notification():
                 "type": notif_type
             }
         }), 201
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
