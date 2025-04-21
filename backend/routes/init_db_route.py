@@ -147,8 +147,8 @@ def init_db():
         CREATE TABLE NOTIFICATION_PREFS (
             StudentID INT,
             ClubID INT,
-            WantsClubNotifications BOOLEAN DEFAULT TRUE,
-            WantsUniversityNotifications BOOLEAN DEFAULT TRUE,
+            WantsClubNotifications BOOLEAN NOT NULL DEFAULT TRUE,
+            WantsUniversityNotifications BOOLEAN NOT NULL DEFAULT TRUE,
             PRIMARY KEY (StudentID, ClubID),
             FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE,
             FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE
