@@ -127,7 +127,7 @@ def init_db():
           IsPublic     BOOLEAN       DEFAULT TRUE,
           Link         VARCHAR(255)  NULL,
           EventType    ENUM('club', 'university') NOT NULL,
-          ADD COLUMN ClubID INT NULL,
+          ClubID INT NULL,
           FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE SET NULL ON UPDATE CASCADE;
           FOREIGN KEY (BookingID)    REFERENCES TIME_SLOT(BookingID)
               ON DELETE CASCADE
