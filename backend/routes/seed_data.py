@@ -110,7 +110,7 @@ def seed_notifications_and_prefs(cursor):
         )
 
     # Notification Preferences for all users
-    for user_id in range(1, 7):  # All users
+    for user_id in range(1, 6):  # All users
         cursor.execute(
             "INSERT INTO NOTIFICATION_PREFS (UserID, ClubNotifs, UniNotifs) VALUES (%s, TRUE, TRUE)",
             (user_id,)
