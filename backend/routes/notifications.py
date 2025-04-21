@@ -8,7 +8,7 @@ notifs_bp = Blueprint("notifications", __name__)
 @notifs_bp.route("/api/notifications/new", methods=["POST", "GET"])
 def create_notification():
     data = request.get_json(silent=True) or request.args
-    booking_id = data.get("bookingid")
+    booking_id = data.get("bookingID")
     title = data.get("title")
     message_r = data.get("message")
     notif_type = data.get("type")  # 'booking_approved', 'club_event', etc.
