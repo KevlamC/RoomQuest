@@ -7,7 +7,7 @@ from .routes.init_db_route import init_db_bp  # Import the init_db route
 from .routes.signup_db import user_bp
 from .routes.user_list_bp import user_list_bp
 from .routes.eventsUpcoming import eventsUpcoming
-from .routes.points import points
+from .routes.points import points_bp
 from .routes.reservUpcoming import reservUpcoming
 from .routes.notifications import notifs_bp
 from .services.scheduler import scheduler_bp
@@ -33,7 +33,7 @@ app.register_blueprint(init_db_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(user_list_bp)
 app.register_blueprint(eventsUpcoming)
-app.register_blueprint(points)
+app.register_blueprint(points_bp)
 app.register_blueprint(reservUpcoming)
 app.register_blueprint(notifs_bp)
 app.register_blueprint(scheduler_bp)
