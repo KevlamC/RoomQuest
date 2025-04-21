@@ -73,32 +73,10 @@ def update_prefs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Get all notifications for a student (personalized).
+# Get all notifications for a user.
 @notifs_bp.route("/api/notifications/user", methods=["GET"])
-def get_user_notifications():
+def get_all_user_notifications():
     student_id = request.args.get("studentID")
-    try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT n.*
-            FROM NOTIFICATIONS n
-            JOIN GETS_STUDENT gs ON n.NotificationID = gs.NotificationID
-            WHERE gs.StudentID = %s
-            ORDER BY n.NotificationID DESC
-        """, (student_id,))
-        results = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify(results), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Get club/university notifications user is subscribed to.
-@notifs_bp.route("/api/notifications/general", methods=["GET"])
-def get_general_notifications():
-    student_id = request.args.get("studentID")
-
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -106,67 +84,180 @@ def get_general_notifications():
         cursor.execute("""
             SELECT DISTINCT n.*
             FROM NOTIFICATIONS n
-            JOIN GETS_CLUB gc ON n.NotificationID = gc.NotificationID
-            JOIN NOTIFICATION_PREFS np ON gc.ClubID = np.ClubID AND np.StudentID = %s
-            WHERE (n.Type = 'club_event' AND np.WantsClubNotifications = TRUE)
-               OR (n.Type = 'university_event' AND np.WantsUniversityNotifications = TRUE)
+            LEFT JOIN GETS_STUDENT gs ON n.NotificationID = gs.NotificationID
+            LEFT JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
+            LEFT JOIN EVENT_DETAILS ed ON ts.BookingID = ed.BookingID
+            LEFT JOIN IS_MEMBER im ON im.StudentID = %s
+            LEFT JOIN GETS_CLUB gc ON n.NotificationID = gc.NotificationID
+            LEFT JOIN NOTIFICATION_PREFS prefs ON prefs.StudentID = %s AND prefs.ClubID = gc.ClubID
+            WHERE 
+                gs.StudentID = %s
+                OR (n.Type = 'club_event' AND im.ClubID = gc.ClubID AND (prefs.WantsClubNotifications IS NULL OR prefs.WantsClubNotifications = TRUE))
+                OR (n.Type = 'university_event' AND (prefs.WantsUniversityNotifications IS NULL OR prefs.WantsUniversityNotifications = TRUE))
             ORDER BY n.NotificationID DESC
-        """, (student_id,))
-        results = cursor.fetchall()
+        """, (student_id, student_id, student_id))
+
+        notifications = cursor.fetchall()
         cursor.close()
         conn.close()
-        return jsonify(results), 200
+        return jsonify(notifications), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Notifications for a user's active/future reservations.
-@notifs_bp.route("/api/notifications/reservations", methods=["GET"])
-def get_reservation_notifications():
+# Get user's upcoming notifications.
+@notifs_bp.route("/api/notifications/user/upcoming", methods=["GET"])
+def get_upcoming_user_notifications():
     student_id = request.args.get("studentID")
-    today = datetime.now().date()
-
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT n.*
+            SELECT DISTINCT n.*
             FROM NOTIFICATIONS n
-            JOIN GETS_STUDENT gs ON n.NotificationID = gs.NotificationID
-            JOIN TIME_SLOT t ON n.BookingID = t.BookingID
-            WHERE gs.StudentID = %s
-              AND t.Date >= %s
-              AND t.BookingType = 'student'
-            ORDER BY t.Date, t.Hour
-        """, (student_id, today))
-        results = cursor.fetchall()
+            JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
+            LEFT JOIN GETS_STUDENT gs ON n.NotificationID = gs.NotificationID
+            LEFT JOIN EVENT_DETAILS ed ON ts.BookingID = ed.BookingID
+            LEFT JOIN IS_MEMBER im ON im.StudentID = %s
+            LEFT JOIN GETS_CLUB gc ON n.NotificationID = gc.NotificationID
+            LEFT JOIN NOTIFICATION_PREFS prefs ON prefs.StudentID = %s AND prefs.ClubID = gc.ClubID
+            WHERE 
+                ts.Date >= CURDATE()
+                AND (
+                    gs.StudentID = %s
+                    OR (n.Type = 'club_event' AND im.ClubID = gc.ClubID AND (prefs.WantsClubNotifications IS NULL OR prefs.WantsClubNotifications = TRUE))
+                    OR (n.Type = 'university_event' AND (prefs.WantsUniversityNotifications IS NULL OR prefs.WantsUniversityNotifications = TRUE))
+                )
+            ORDER BY ts.Date ASC, ts.Hour ASC
+        """, (student_id, student_id, student_id))
+
+        notifications = cursor.fetchall()
         cursor.close()
         conn.close()
-        return jsonify(results), 200
+        return jsonify(notifications), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Delete a specific notification or clean old ones.
+# Notifications for a user's active/future reservations.
+@notifs_bp.route("/api/notifications/user/reservations", methods=["GET"])
+def get_personal_reservation_notifications():
+    student_id = request.args.get("studentID")
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT DISTINCT n.*
+            FROM NOTIFICATIONS n
+            JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
+            JOIN USER u ON ts.UserID = u.ID
+            WHERE u.ID = %s AND ts.Date >= CURDATE()
+            ORDER BY ts.Date ASC, ts.Hour ASC
+        """, (student_id,))
+
+        notifications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(notifications), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Delete a specific notification.
 @notifs_bp.route("/api/notifications/delete", methods=["POST", "GET"])
 def delete_notification():
     data = request.get_json(silent=True) or request.args
-    notif_id = data.get("notificationID")
-    cutoff = data.get("cutoffDate")  # optional YYYY-MM-DD
+    notification_id = data.get("notificationID")
+    user_id = data.get("userID")
 
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
-        if notif_id:
-            cursor.execute("DELETE FROM NOTIFICATIONS WHERE NotificationID = %s", (notif_id,))
-        elif cutoff:
-            cursor.execute("DELETE FROM NOTIFICATIONS WHERE DATE(BookingID) < %s", (cutoff,))
+        # Determine user type
+        cursor.execute("SELECT userType FROM USER WHERE ID = %s", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        user_type = user["userType"]
+
+        # Check permission
+        if user_type == "student":
+            cursor.execute("""
+                DELETE FROM GETS_STUDENT
+                WHERE NotificationID = %s AND StudentID = %s
+            """, (notification_id, user_id))
+
+        elif user_type == "club":
+            cursor.execute("""
+                DELETE FROM GETS_CLUB
+                WHERE NotificationID = %s AND ClubID = %s
+            """, (notification_id, user_id))
+
+        elif user_type == "admin":
+            cursor.execute("""
+                DELETE FROM NOTIFICATIONS WHERE NotificationID = %s
+            """, (notification_id,))
         else:
-            return jsonify({"error": "Provide notificationID or cutoffDate"}), 400
+            return jsonify({"error": "User type not allowed to delete notifications."}), 403
 
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Notification(s) deleted"}), 200
+        return jsonify({"message": "Notification deleted (or unsubscribed)."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Delete old notifications.
+@notifs_bp.route("/api/notifications/delete-old", methods=["POST", "GET"])
+def delete_old_notifications():
+    data = request.get_json(silent=True) or request.args
+    user_id = data.get("userID")
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Get user type
+        cursor.execute("SELECT userType FROM USER WHERE ID = %s", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        user_type = user["userType"]
+
+        # Bulk delete based on date of TIME_SLOT
+        if user_type == "student":
+            cursor.execute("""
+                DELETE gs FROM GETS_STUDENT gs
+                JOIN NOTIFICATIONS n ON gs.NotificationID = n.NotificationID
+                JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
+                WHERE gs.StudentID = %s AND ts.Date < CURDATE()
+            """, (user_id,))
+
+        elif user_type == "club":
+            cursor.execute("""
+                DELETE gc FROM GETS_CLUB gc
+                JOIN NOTIFICATIONS n ON gc.NotificationID = n.NotificationID
+                JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
+                WHERE gc.ClubID = %s AND ts.Date < CURDATE()
+            """, (user_id,))
+
+        elif user_type == "admin":
+            cursor.execute("""
+                DELETE FROM NOTIFICATIONS
+                WHERE BookingID IN (
+                    SELECT BookingID FROM TIME_SLOT WHERE Date < CURDATE()
+                )
+            """)
+        else:
+            return jsonify({"error": "User type not supported"}), 403
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "Old notifications deleted"}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
