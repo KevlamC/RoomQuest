@@ -128,9 +128,8 @@ def init_db():
           Link         VARCHAR(255)  NULL,
           EventType    ENUM('club', 'university') NOT NULL,
           ClubID INT NULL,
-          FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE SET NULL ON UPDATE CASCADE;
-          FOREIGN KEY (BookingID)    REFERENCES TIME_SLOT(BookingID)
-              ON DELETE CASCADE
+          FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE SET NULL ON UPDATE CASCADE,
+          FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE
         );
         """)
 
