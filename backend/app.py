@@ -16,6 +16,7 @@ from .routes.auth import auth_bp
 from .routes.features_add_del import features_bp
 import os
 from .routes.maps import maps
+from .services.admin import admin_bp
 
 
 app = Flask(__name__)  # make sure this comes first!
@@ -43,7 +44,7 @@ app.register_blueprint(seed_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(features_bp)
 app.register_blueprint(maps)
-
+app.register_blueprint(admin_bp)
 
 # TEMP: Add health check endpoint directly
 @app.route("/health", methods=["GET"])
