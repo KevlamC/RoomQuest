@@ -113,7 +113,7 @@ def get_upcoming_user_notifications():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT DISTINCT n.*
+            SELECT DISTINCT n.NotificationID, n.BookingID, n.Title, n.Message, n.Type
             FROM NOTIFICATIONS n
             JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
             LEFT JOIN GETS_STUDENT gs ON n.NotificationID = gs.NotificationID
@@ -122,9 +122,8 @@ def get_upcoming_user_notifications():
             LEFT JOIN GETS_CLUB gc ON n.NotificationID = gc.NotificationID
             LEFT JOIN NOTIFICATION_PREFS prefs ON prefs.StudentID = %s AND prefs.ClubID = gc.ClubID
             WHERE 
-                ts.Date >= CURDATE()
+                (ts.Date > CURDATE() OR (ts.Date = CURDATE() AND ts.Hour >= CURTIME()))
                 AND (
-                    ts.Hour >= CURTIME()
                     gs.StudentID = %s
                     OR (n.Type = 'club_event' AND im.ClubID = gc.ClubID AND (prefs.WantsClubNotifications IS NULL OR prefs.WantsClubNotifications = TRUE))
                     OR (n.Type = 'university_event' AND (prefs.WantsUniversityNotifications IS NULL OR prefs.WantsUniversityNotifications = TRUE))
@@ -148,11 +147,11 @@ def get_personal_reservation_notifications():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT DISTINCT n.*
+            SELECT n.NotificationID, n.BookingID, n.Title, n.Message, n.Type,
+                   ts.Date, ts.Hour
             FROM NOTIFICATIONS n
             JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
-            JOIN USER u ON ts.UserID = u.ID
-            WHERE u.ID = %s AND ts.Date >= CURDATE()
+            WHERE ts.UserID = %s AND ts.Date >= CURDATE()
             ORDER BY ts.Date ASC, ts.Hour ASC
         """, (student_id,))
 
