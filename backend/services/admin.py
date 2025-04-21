@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
+from datetime import timedelta
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -15,6 +16,12 @@ def get_unapproved_bookings():
             WHERE IsApproved = FALSE
         """)
         bookings = cursor.fetchall()
+
+        # Convert timedelta fields to strings
+        for b in bookings:
+            for key, value in b.items():
+                if isinstance(value, timedelta):
+                    b[key] = str(value)
 
         cursor.close()
         conn.close()
