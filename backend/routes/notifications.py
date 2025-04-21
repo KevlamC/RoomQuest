@@ -10,7 +10,7 @@ def create_notification():
     data = request.get_json()
     booking_id = data.get("bookingid")
     title = data.get("title")
-    message = data.get("message")
+    message_r = data.get("message")
     notif_type = data.get("type")  # 'booking_approved', 'club_event', etc.
 
     try:
@@ -19,11 +19,19 @@ def create_notification():
         cursor.execute("""
             INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
             VALUES (%s, %s, %s, %s)
-        """, (booking_id, title, message, notif_type))
+        """, (booking_id, title, message_r, notif_type))
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Notification created successfully"}), 201
+        return jsonify({
+            "message": "Notification created successfully",
+            "notification": {
+                "bookingID": booking_id,
+                "title": title,
+                "message": message_r,
+                "type": notif_type
+            }
+        }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -49,7 +57,15 @@ def update_prefs():
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Preferences updated"}), 200
+        return jsonify({
+            "message": "Preferences updated",
+            "preferences": {
+                "studentID": student_id,
+                "clubID": club_id,
+                "wantsClub": wants_club,
+                "wantsUniversity": wants_uni
+            }
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
