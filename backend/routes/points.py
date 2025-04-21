@@ -68,12 +68,6 @@ def award_student_points():
             # Update PointsAwarded to TRUE
             cur.execute("UPDATE TIME_SLOT SET PointsAwarded = TRUE WHERE BookingID = %s", (booking_id,))
 
-            # Insert into POINTS_TRANSACTION
-            cur.execute("""
-                INSERT INTO POINTS_TRANSACTION (TransactionID, StudentID, PointsChange, TransactionDate, Description)
-                VALUES (UUID_SHORT(), %s, %s, NOW(), %s)
-            """, (user_id, earned_points, f"Points for past reservation ID {booking_id}"))
-
         # Update student's points balance
         if total_points > 0:
             cur.execute("UPDATE STUDENT SET Points = Points + %s WHERE ID = %s", (total_points, user_id))
