@@ -39,62 +39,57 @@ def get_student_points():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@points_bp.route('/api/award-points', methods=['POST', 'GET'])  
-def award_points():
+@points_bp.route("/api/points/award-points", methods=["GET", "POST"])
+def award_student_points():
     try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        user_id = request.args.get("UserID")
+        if not user_id:
+            return jsonify({"success": False, "message": "Missing UserID parameter"}), 400
 
-        now = datetime.now()
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
 
-        # Find approved bookings that ended within the last minute and haven't been awarded points
-        cursor.execute("""
-            SELECT BookingID, UserID, BookingType, Duration
-            FROM TIME_SLOT
-            WHERE IsApproved = TRUE AND PointsAwarded = FALSE
-        """)
+        # Fetch eligible past reservations that haven't been awarded points yet
+        cur.execute("""
+            SELECT * FROM TIME_SLOT 
+            WHERE (BookingType = 'student' OR BookingType = 'club')
+              AND ((ADDTIME(Hour, SEC_TO_TIME(Duration*3600)) <= CURTIME()) AND (Date <= CURDATE()))
+              AND IsApproved = TRUE AND PointsAwarded = FALSE AND UserID = %s
+        """, (user_id,))
+        reservations = cur.fetchall()
 
-        bookings = cursor.fetchall()
-        awarded = []
+        total_points = 0
+        for res in reservations:
+            booking_id = res["BookingID"]
+            duration_hours = res["Duration"]
+            earned_points = duration_hours * 20
+            total_points += earned_points
 
-        for booking in bookings:
-            booking_id = booking['BookingID']
-            user_id = booking['UserID']
-            duration = booking['Duration']
-            booking_type = booking['BookingType']
+            # Update PointsAwarded to TRUE
+            cur.execute("UPDATE TIME_SLOT SET PointsAwarded = TRUE WHERE BookingID = %s", (booking_id,))
 
-            # Get start datetime
-            cursor.execute("SELECT Date, Hour FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
-            time_data = cursor.fetchone()
-            start_dt = datetime.combine(time_data['Date'], (datetime.min + time_data['Hour']).time())
-            end_dt = start_dt + timedelta(hours=duration)
+            # Insert into POINTS_TRANSACTION
+            cur.execute("""
+                INSERT INTO POINTS_TRANSACTION (TransactionID, StudentID, PointsChange, TransactionDate, Description)
+                VALUES (UUID_SHORT(), %s, %s, NOW(), %s)
+            """, (user_id, earned_points, f"Points for past reservation ID {booking_id}"))
 
-            # Allow a 1-minute window for exact match
-            if abs((now - end_dt).total_seconds()) <= 60:
-                points = duration * 20
+        # Update student's points balance
+        if total_points > 0:
+            cur.execute("UPDATE STUDENT SET Points = Points + %s WHERE ID = %s", (total_points, user_id))
 
-                if booking_type == 'student':
-                    cursor.execute("UPDATE STUDENT SET Points = Points + %s WHERE ID = %s", (points, user_id))
-                elif booking_type == 'club':
-                    cursor.execute("UPDATE CLUB SET Points = Points + %s WHERE ID = %s", (points, user_id))
+        conn.commit()
+        cur.close()
+        conn.close()
 
-                cursor.execute("UPDATE TIME_SLOT SET PointsAwarded = TRUE WHERE BookingID = %s", (booking_id,))
-
-                awarded.append({
-                    "bookingID": booking_id,
-                    "userID": user_id,
-                    "points": points,
-                    "type": booking_type
-                })
-
-        connection.commit()
-        cursor.close()
-        connection.close()
-
-        return jsonify({"success": True, "awarded": awarded})
+        return jsonify({
+            "success": True,
+            "awarded_points": total_points,
+            "message": f"Points awarded for {len(reservations)} past reservations."
+        }), 200
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 # 🔹 Get club points
