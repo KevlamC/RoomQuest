@@ -15,9 +15,11 @@ from .routes.seed_data import seed_bp
 from .routes.auth import auth_bp
 from .routes.features_add_del import features_bp
 import os
+from .routes.maps import maps
 
 
 app = Flask(__name__)  # make sure this comes first!
+app.static_folder = 'static'
 if os.environ.get("FLASK_ENV") == "development":
     # In dev mode, allow all origins
     CORS(app, resources={r"/*": {"origins": "*"}})
@@ -40,6 +42,7 @@ app.register_blueprint(scheduler_bp)
 app.register_blueprint(seed_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(features_bp)
+app.register_blueprint(maps)
 
 
 # TEMP: Add health check endpoint directly
