@@ -29,7 +29,7 @@ def get_student_reservations():
         cur = conn.cursor(dictionary=True)
         cur.execute("SELECT * FROM TIME_SLOT WHERE (BookingType='student' OR BookingType='club') AND "
         "((ADDTIME(Hour, SEC_TO_TIME(Duration*3600)) <= CURTIME()) AND (Date <= CURDATE())) AND " \
-        "IsApproved = TRUE AND UserID = %d", (user_id),)
+        "IsApproved = TRUE AND UserID = %s", (user_id),)
         raw = cur.fetchall()
         cur.close()
         conn.close()
