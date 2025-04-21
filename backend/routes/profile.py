@@ -21,7 +21,7 @@ def serialize_booking_dict(row):
 @profile_bp.route("/api/profile/past-res", methods=["GET"])
 def get_student_reservations():
     try:
-        user_id = request.args.get("user_id")
+        user_id = request.args.get("UserID")
         if not user_id:
             return jsonify({"error": "Missing user_id parameter"}), 400
         
