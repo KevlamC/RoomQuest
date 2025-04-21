@@ -122,7 +122,7 @@ def seed_notifications_and_prefs(cursor):
         for club_id in [4, 5]:
             cursor.execute(
                 "INSERT INTO NOTIFICATION_PREFS (StudentID, ClubID, WantsClubNotifications, WantsUniversityNotifications) VALUES (%s, %s, %s, %s)",
-                (student_id, club_id, True, True)
+                (student_id, club_id, True, False)
             )
 
     # Club membership
