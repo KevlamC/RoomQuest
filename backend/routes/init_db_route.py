@@ -112,6 +112,7 @@ def init_db():
             Building VARCHAR(255) NOT NULL,
             BookingType ENUM('student', 'club', 'course', 'admin', 'university_event') NOT NULL,
             CourseID INT DEFAULT NULL,
+            PointsAwarded BOOLEAN DEFAULT FALSE,
             IsApproved BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
             FOREIGN KEY (RoomNumber, Building) REFERENCES ROOMS(RoomNumber, Building) ON DELETE CASCADE ON UPDATE CASCADE,
