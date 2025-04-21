@@ -192,7 +192,7 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE POINTS_TRANSACTION (
-            TransactionID BIGINT PRIMARY KEY,
+            TransactionID INT PRIMARY KEY,
             StudentID INT,
             PointsChange INT,
             TransactionDate DATETIME,
