@@ -33,9 +33,7 @@ def seed_users(cursor):
         # Add your admin here if needed:
         # {"ID": 99, "Email": "youradmin@example.com", "Username": "youradmin", "Password": "securepass", "userType": "admin"},
     ]
-    cursor.execute("DELETE FROM STUDENT;")
-    cursor.execute("DELETE FROM CLUB;")
-    cursor.execute("DELETE FROM USER;")
+    
     for user in users:
         cursor.execute(
             "INSERT INTO USER (ID, Email, Username, Password, userType) VALUES (%s, %s, %s, %s, %s)",
