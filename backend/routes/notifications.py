@@ -113,7 +113,7 @@ def get_upcoming_user_notifications():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT DISTINCT n.NotificationID, n.BookingID, n.Title, n.Message, n.Type
+            SELECT n.*
             FROM NOTIFICATIONS n
             JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
             LEFT JOIN GETS_STUDENT gs ON n.NotificationID = gs.NotificationID
@@ -122,7 +122,8 @@ def get_upcoming_user_notifications():
             LEFT JOIN GETS_CLUB gc ON n.NotificationID = gc.NotificationID
             LEFT JOIN NOTIFICATION_PREFS prefs ON prefs.StudentID = %s AND prefs.ClubID = gc.ClubID
             WHERE 
-                (ts.Date > CURDATE() OR (ts.Date = CURDATE() AND ts.Hour >= CURTIME()))
+                ts.Date >= CURDATE()
+                AND ts.Hour >= CURTIME()
                 AND (
                     gs.StudentID = %s
                     OR (n.Type = 'club_event' AND im.ClubID = gc.ClubID AND (prefs.WantsClubNotifications IS NULL OR prefs.WantsClubNotifications = TRUE))
@@ -163,6 +164,7 @@ def get_personal_reservation_notifications():
         return jsonify({"error": str(e)}), 500
 
 # Delete a specific notification.
+# Delete a specific notification.
 @notifs_bp.route("/api/notifications/delete", methods=["POST", "GET"])
 def delete_notification():
     data = request.get_json(silent=True) or request.args
@@ -173,6 +175,12 @@ def delete_notification():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # Check if the notification exists
+        cursor.execute("SELECT * FROM NOTIFICATIONS WHERE NotificationID = %s", (notification_id,))
+        notification = cursor.fetchone()
+        if not notification:
+            return jsonify({"error": "Notification not found"}), 404
+
         # Determine user type
         cursor.execute("SELECT userType FROM USER WHERE ID = %s", (user_id,))
         user = cursor.fetchone()
@@ -182,33 +190,43 @@ def delete_notification():
         user_type = user["userType"]
 
         # Check permission
+        rows_deleted = 0
         if user_type == "student":
             cursor.execute("""
                 DELETE FROM GETS_STUDENT
                 WHERE NotificationID = %s AND StudentID = %s
             """, (notification_id, user_id))
+            rows_deleted = cursor.rowcount  # Check how many rows were affected
 
         elif user_type == "club":
             cursor.execute("""
                 DELETE FROM GETS_CLUB
                 WHERE NotificationID = %s AND ClubID = %s
             """, (notification_id, user_id))
+            rows_deleted = cursor.rowcount
 
         elif user_type == "admin":
             cursor.execute("""
                 DELETE FROM NOTIFICATIONS WHERE NotificationID = %s
             """, (notification_id,))
+            rows_deleted = cursor.rowcount
         else:
             return jsonify({"error": "User type not allowed to delete notifications."}), 403
 
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Notification deleted (or unsubscribed)."}), 200
+
+        # Return a more specific message based on the result
+        if rows_deleted > 0:
+            return jsonify({"message": "Notification deleted (or unsubscribed)."}), 200
+        else:
+            return jsonify({"message": "No notifications were deleted."}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Delete old notifications.
 # Delete old notifications.
 @notifs_bp.route("/api/notifications/delete-old", methods=["POST", "GET"])
 def delete_old_notifications():
@@ -228,6 +246,7 @@ def delete_old_notifications():
         user_type = user["userType"]
 
         # Bulk delete based on date of TIME_SLOT
+        rows_deleted = 0
         if user_type == "student":
             cursor.execute("""
                 DELETE gs FROM GETS_STUDENT gs
@@ -235,6 +254,7 @@ def delete_old_notifications():
                 JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
                 WHERE gs.StudentID = %s AND ts.Date < CURDATE()
             """, (user_id,))
+            rows_deleted = cursor.rowcount
 
         elif user_type == "club":
             cursor.execute("""
@@ -243,6 +263,7 @@ def delete_old_notifications():
                 JOIN TIME_SLOT ts ON n.BookingID = ts.BookingID
                 WHERE gc.ClubID = %s AND ts.Date < CURDATE()
             """, (user_id,))
+            rows_deleted = cursor.rowcount
 
         elif user_type == "admin":
             cursor.execute("""
@@ -251,13 +272,19 @@ def delete_old_notifications():
                     SELECT BookingID FROM TIME_SLOT WHERE Date < CURDATE()
                 )
             """)
+            rows_deleted = cursor.rowcount
         else:
             return jsonify({"error": "User type not supported"}), 403
 
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify({"message": "Old notifications deleted"}), 200
+
+        # Return a more specific message based on the result
+        if rows_deleted > 0:
+            return jsonify({"message": "Old notifications deleted"}), 200
+        else:
+            return jsonify({"message": "No old notifications to delete."}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
