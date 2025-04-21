@@ -7,7 +7,7 @@ notifs_bp = Blueprint("notifications", __name__)
 # Insert a new notification.
 @notifs_bp.route("/api/notifications/new", methods=["POST", "GET"])
 def create_notification():
-    data = request.get_json()
+    data = request.get_json(silent=True) or request.args
     booking_id = data.get("bookingid")
     title = data.get("title")
     message_r = data.get("message")
@@ -38,7 +38,7 @@ def create_notification():
 # Update user notification preferences.
 @notifs_bp.route("/api/notifications/prefs", methods=["POST", "GET"])
 def update_prefs():
-    data = request.get_json()
+    data = request.get_json(silent=True) or request.args
     student_id = data.get("studentID")
     club_id = data.get("clubID")
     wants_club = data.get("wantsClub", True)
@@ -145,7 +145,7 @@ def get_reservation_notifications():
 # Delete a specific notification or clean old ones.
 @notifs_bp.route("/api/notifications/delete", methods=["POST", "GET"])
 def delete_notification():
-    data = request.get_json()
+    data = request.get_json(silent=True) or request.args
     notif_id = data.get("notificationID")
     cutoff = data.get("cutoffDate")  # optional YYYY-MM-DD
 
