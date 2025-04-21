@@ -12,6 +12,7 @@ def run_seeding():
         seed_users(cursor)
         seed_rooms_and_features(cursor)
         seed_timeslots(cursor)
+        seed_notifications_and_prefs(cursor)
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
     except Exception as e:
@@ -28,13 +29,17 @@ def seed_users(cursor):
         {"ID": 3, "Email": "student3@example.com", "Username": "student3", "Password": "password3", "userType": "student"},
         {"ID": 4, "Email": "club1@example.com", "Username": "club1", "Password": "password4", "userType": "club"},
         {"ID": 5, "Email": "club2@example.com", "Username": "club2", "Password": "password5", "userType": "club"},
+        # Add your admin here if needed:
+        # {"ID": 99, "Email": "youradmin@example.com", "Username": "youradmin", "Password": "securepass", "userType": "admin"},
     ]
+    cursor.execute("DELETE FROM STUDENT;")
+    cursor.execute("DELETE FROM CLUB;")
+    cursor.execute("DELETE FROM USER;")
     for user in users:
         cursor.execute("""
             INSERT INTO USER (ID, Email, Username, Password, userType)
             VALUES (%s, %s, %s, %s, %s)
         """, (user["ID"], user["Email"], user["Username"], user["Password"], user["userType"]))
-
         if user["userType"] == "student":
             cursor.execute("INSERT INTO STUDENT (ID, Points) VALUES (%s, 0)", (user["ID"],))
         elif user["userType"] == "club":
@@ -53,10 +58,8 @@ def seed_rooms_and_features(cursor):
         {"RoomNumber": "909", "Building": "IT", "Capacity": 28, "Features": ["computers", "projector"]},
         {"RoomNumber": "100A", "Building": "Commerce", "Capacity": 32, "Features": ["whiteboard", "dual projectors", "computers"]},
     ]
-
     cursor.execute("DELETE FROM FEATURES;")
     cursor.execute("DELETE FROM ROOMS;")
-
     for room in rooms:
         cursor.execute(
             "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
@@ -69,8 +72,6 @@ def seed_rooms_and_features(cursor):
             )
 
 def seed_timeslots(cursor):
-    cursor.execute("DELETE FROM TIME_SLOT;")
-
     timeslots = [
         {"UserID": 1, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "101", "Building": "Engineering", "BookingType": "student", "CourseID": None, "IsApproved": True},
         {"UserID": 2, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "202", "Building": "Science", "BookingType": "student", "CourseID": None, "IsApproved": False},
@@ -78,20 +79,51 @@ def seed_timeslots(cursor):
         {"UserID": 5, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "606", "Building": "Medicine", "BookingType": "club", "CourseID": None, "IsApproved": False},
         {"UserID": 3, "Date": "2025-04-21", "Hour": "20:00:00", "Duration": 3, "RoomNumber": "100A", "Building": "Commerce", "BookingType": "student", "CourseID": None, "IsApproved": True},
     ]
-
+    cursor.execute("DELETE FROM TIME_SLOT;")
     for ts in timeslots:
         cursor.execute("""
             INSERT INTO TIME_SLOT
               (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
-            ts["UserID"],
-            ts["Date"],
-            ts["Hour"],  # Ensure time is always in HH:MM:SS format
-            ts["Duration"],
-            ts["RoomNumber"],
-            ts["Building"],
-            ts["BookingType"],
-            ts["CourseID"],
-            ts["IsApproved"]
+            ts["UserID"], ts["Date"], ts["Hour"], ts["Duration"],
+            ts["RoomNumber"], ts["Building"], ts["BookingType"], ts["CourseID"], ts["IsApproved"]
         ))
+
+def seed_notifications_and_prefs(cursor):
+    cursor.execute("DELETE FROM GETS_STUDENT;")
+    cursor.execute("DELETE FROM GETS_CLUB;")
+    cursor.execute("DELETE FROM IS_MEMBER;")
+    cursor.execute("DELETE FROM NOTIFICATION_PREFS;")
+    cursor.execute("DELETE FROM NOTIFICATIONS;")
+
+    notifications = [
+        {"NotificationID": 1, "Title": "Booking Approved", "Message": "Your booking was approved!", "Date": "2025-04-19"},
+        {"NotificationID": 2, "Title": "New Club Event", "Message": "Music Club is hosting a concert.", "Date": "2025-04-19"},
+        {"NotificationID": 3, "Title": "University Alert", "Message": "Campus will be closed tomorrow.", "Date": "2025-04-20"},
+        {"NotificationID": 4, "Title": "Points Added", "Message": "You earned 10 points.", "Date": "2025-04-21"},
+    ]
+    for n in notifications:
+        cursor.execute(
+            "INSERT INTO NOTIFICATIONS (NotificationID, Title, Message, Date) VALUES (%s, %s, %s, %s)",
+            (n["NotificationID"], n["Title"], n["Message"], n["Date"])
+        )
+
+    # Notification Preferences for all users
+    for user_id in range(1, 7):  # All users
+        cursor.execute(
+            "INSERT INTO NOTIFICATION_PREFS (UserID, ClubNotifs, UniNotifs) VALUES (%s, TRUE, TRUE)",
+            (user_id,)
+        )
+
+    # IS_MEMBER: Students 1 & 2 are members of club 4
+    cursor.execute("INSERT INTO IS_MEMBER (StudentID, ClubID) VALUES (1, 4)")
+    cursor.execute("INSERT INTO IS_MEMBER (StudentID, ClubID) VALUES (2, 4)")
+
+    # GETS_STUDENT: student 1 & 3 get notifs
+    cursor.execute("INSERT INTO GETS_STUDENT (NotificationID, StudentID) VALUES (1, 1)")
+    cursor.execute("INSERT INTO GETS_STUDENT (NotificationID, StudentID) VALUES (3, 3)")
+    cursor.execute("INSERT INTO GETS_STUDENT (NotificationID, StudentID) VALUES (4, 1)")
+
+    # GETS_CLUB: club 4 gets event notif
+    cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
