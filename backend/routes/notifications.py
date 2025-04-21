@@ -63,10 +63,6 @@ def create_notification():
             if student_rows:
                 values = [(notification_id, row["StudentID"]) for row in student_rows]
                 cursor.executemany("""
-                    INSERT INTO GETS_CLUB (NotificationID, ClubID)
-                    VALUES (%s, %s)
-                """, [(notification_id, None)] * len(student_rows))  # For traceability
-                cursor.executemany("""
                     INSERT INTO GETS_STUDENT (NotificationID, StudentID)
                     VALUES (%s, %s)
                 """, values)
