@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
+from datetime import datetime, timedelta
 
 points_bp = Blueprint('points', __name__)
 
@@ -33,6 +34,64 @@ def get_student_points():
             return jsonify({"success": True, "points": result["Points"]})
         else:
             return jsonify({"success": False, "error": "Student not found"}), 404
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@points_award_bp.route('/api/award-points', methods=['POST', 'GET'])  # allow both for testing
+def award_points():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        now = datetime.now()
+
+        # Find approved bookings that ended within the last minute and haven't been awarded points
+        cursor.execute("""
+            SELECT BookingID, UserID, BookingType, Duration
+            FROM TIME_SLOT
+            WHERE IsApproved = TRUE AND PointsAwarded = FALSE
+        """)
+
+        bookings = cursor.fetchall()
+        awarded = []
+
+        for booking in bookings:
+            booking_id = booking['BookingID']
+            user_id = booking['UserID']
+            duration = booking['Duration']
+            booking_type = booking['BookingType']
+
+            # Get start datetime
+            cursor.execute("SELECT Date, Hour FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
+            time_data = cursor.fetchone()
+            start_dt = datetime.combine(time_data['Date'], (datetime.min + time_data['Hour']).time())
+            end_dt = start_dt + timedelta(hours=duration)
+
+            # Allow a 1-minute window for exact match
+            if abs((now - end_dt).total_seconds()) <= 60:
+                points = duration * 20
+
+                if booking_type == 'student':
+                    cursor.execute("UPDATE STUDENT SET Points = Points + %s WHERE ID = %s", (points, user_id))
+                elif booking_type == 'club':
+                    cursor.execute("UPDATE CLUB SET Points = Points + %s WHERE ID = %s", (points, user_id))
+
+                cursor.execute("UPDATE TIME_SLOT SET PointsAwarded = TRUE WHERE BookingID = %s", (booking_id,))
+
+                awarded.append({
+                    "bookingID": booking_id,
+                    "userID": user_id,
+                    "points": points,
+                    "type": booking_type
+                })
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        return jsonify({"success": True, "awarded": awarded})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
