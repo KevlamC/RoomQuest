@@ -39,7 +39,7 @@ def get_student_points():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@points_award_bp.route('/api/award-points', methods=['POST', 'GET'])  # allow both for testing
+@points_bp.route('/api/award-points', methods=['POST', 'GET'])  
 def award_points():
     try:
         connection = get_connection()
