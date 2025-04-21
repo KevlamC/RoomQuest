@@ -124,6 +124,7 @@ def get_upcoming_user_notifications():
             WHERE 
                 ts.Date >= CURDATE()
                 AND (
+                    ts.Hour >= CURTIME()
                     gs.StudentID = %s
                     OR (n.Type = 'club_event' AND im.ClubID = gc.ClubID AND (prefs.WantsClubNotifications IS NULL OR prefs.WantsClubNotifications = TRUE))
                     OR (n.Type = 'university_event' AND (prefs.WantsUniversityNotifications IS NULL OR prefs.WantsUniversityNotifications = TRUE))
