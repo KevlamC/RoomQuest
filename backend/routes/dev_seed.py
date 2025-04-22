@@ -8,6 +8,12 @@ def seed_test_data():
     try:
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
+        # Clean up old data
+        cursor.execute("DELETE FROM USER;")
+        cursor.execute("DELETE FROM TIME_SLOT;")
+        cursor.execute("DELETE FROM CLUB;")
+        cursor.execute("DELETE FROM EVENT_DETAILS;")
+        cursor.execute("DELETE FROM EVENT_TOPICS;")
 
         # Insert test users
         users = [
@@ -16,6 +22,7 @@ def seed_test_data():
             (3, "student3@example.com", "student3", "pass123", "student"),
             (4, "club1@example.com", "clubOne", "clubpass", "club"),
             (5, "club2@example.com", "clubTwo", "clubpass", "club"),
+            (987654321, "admin@example.com", "admin", "adminpass", "admin")
         ]
         cursor.executemany(
             "INSERT INTO USER (ID, Email, Username, Password, userType) VALUES (%s, %s, %s, %s, %s)",
