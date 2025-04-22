@@ -13,19 +13,22 @@ def init_db():
         cursor.execute("DROP TABLE IF EXISTS GETS_CLUB;")
         cursor.execute("DROP TABLE IF EXISTS GETS_STUDENT;")
         cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
+        cursor.execute("DROP TABLE IF EXISTS USER_EVENT_TOPIC_PREFS;")
+        cursor.execute("DROP TABLE IF EXISTS USER_CLUB_PREFS;")
         cursor.execute("DROP TABLE IF EXISTS NOTIFICATION_PREFS;")
         cursor.execute("DROP TABLE IF EXISTS NOTIFICATIONS;")
-        cursor.execute("DROP TABLE IF EXISTS EVENT_TOPICS;");
+        cursor.execute("DROP TABLE IF EXISTS EVENT_TOPICS;")
         cursor.execute("DROP TABLE IF EXISTS EVENT_DETAILS;")
         cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
         cursor.execute("DROP TABLE IF EXISTS TIME_SLOT;")
         cursor.execute("DROP TABLE IF EXISTS FEATURES;")
         cursor.execute("DROP TABLE IF EXISTS COURSE;")
         cursor.execute("DROP TABLE IF EXISTS STUDENT;")
-        cursor.execute("DROP TABLE IF EXISTS ADMIN;")
         cursor.execute("DROP TABLE IF EXISTS CLUB;")
+        cursor.execute("DROP TABLE IF EXISTS ADMIN;")
         cursor.execute("DROP TABLE IF EXISTS USER;")
         cursor.execute("DROP TABLE IF EXISTS ROOMS;")
+
         
         # Recreate all tables
         cursor.execute("""
