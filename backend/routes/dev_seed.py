@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
 from backend.config import get_connection
 
+# MY SEED FOR SEARCH EVENTS 
+
 dev_bp = Blueprint('dev_seed', __name__)
 
 @dev_bp.route('/myseed', methods=['GET'])
@@ -22,7 +24,7 @@ def seed_test_data():
             (3, "student3@example.com", "student3", "pass123", "student"),
             (4, "club1@example.com", "clubOne", "clubpass", "club"),
             (5, "club2@example.com", "clubTwo", "clubpass", "club"),
-            (987654321, "admin@example.com", "admin", "adminpass", "admin")
+            (987654321, "admin@example.com", "admin1", "adminpass", "admin")
         ]
         cursor.executemany(
             "INSERT INTO USER (ID, Email, Username, Password, userType) VALUES (%s, %s, %s, %s, %s)",
