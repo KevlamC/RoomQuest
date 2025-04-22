@@ -154,7 +154,7 @@ def init_db():
             PRIMARY KEY (UserID, Topic),
             FOREIGN KEY (UserID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
         );
-
+        """)
         
         
         cursor.execute("""
