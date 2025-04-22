@@ -13,6 +13,8 @@ def run_seeding():
         seed_rooms_and_features(cursor)
         seed_timeslots(cursor)
         seed_notifications_and_prefs(cursor)
+        seed_user_club_prefs(cursor)        # ← NEW
+        seed_user_event_topic_prefs(cursor) # ← NEW
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
     except Exception as e:
@@ -25,13 +27,26 @@ def run_seeding():
 
 def seed_users(cursor):
     users = [
+        # ── students ──
         {"ID": 1, "Email": "student1@example.com", "Username": "student1", "Password": "password1", "userType": "student"},
         {"ID": 2, "Email": "student2@example.com", "Username": "student2", "Password": "password2", "userType": "student"},
         {"ID": 3, "Email": "student3@example.com", "Username": "student3", "Password": "password3", "userType": "student"},
-        {"ID": 4, "Email": "club1@example.com",    "Username": "club1",    "Password": "password4", "userType": "club"},
-        {"ID": 5, "Email": "club2@example.com",    "Username": "club2",    "Password": "password5", "userType": "club"},
-        # Add your admin here if needed:
-        # {"ID": 99, "Email": "youradmin@example.com", "Username": "youradmin", "Password": "securepass", "userType": "admin"},
+
+        # ── existing clubs ──
+        {"ID": 4,  "Email": "club1@example.com", "Username": "club1", "Password": "password4",  "userType": "club"},
+        {"ID": 5,  "Email": "club2@example.com", "Username": "club2", "Password": "password5",  "userType": "club"},
+
+        # ── new clubs ──
+        {"ID": 6,  "Email": "ess@example.com",               "Username": "ess",               "Password": "password6",  "userType": "club"},
+        {"ID": 7,  "Email": "techstart@example.com",         "Username": "techstart",         "Password": "password7",  "userType": "club"},
+        {"ID": 8,  "Email": "schulichracing@example.com",    "Username": "schulichracing",    "Password": "password8",  "userType": "club"},
+        {"ID": 9,  "Email": "wise@example.com",              "Username": "wise",              "Password": "password9",  "userType": "club"},
+        {"ID": 10, "Email": "csus@example.com",              "Username": "csus",              "Password": "password10", "userType": "club"},
+        {"ID": 11, "Email": "debatesociety@example.com",     "Username": "debatesociety",     "Password": "password11", "userType": "club"},
+        {"ID": 12, "Email": "enactus@example.com",           "Username": "enactus",           "Password": "password12", "userType": "club"},
+        {"ID": 13, "Email": "soundstage@example.com",        "Username": "soundstage",        "Password": "password13", "userType": "club"},
+        {"ID": 14, "Email": "outdooradventurers@example.com","Username": "outdooradventurers","Password": "password14", "userType": "club"},
+        {"ID": 15, "Email": "css@example.com",               "Username": "css",               "Password": "password15", "userType": "club"},
     ]
     
     for user in users:
@@ -133,3 +148,42 @@ def seed_notifications_and_prefs(cursor):
 
     # Assign club event to club 4
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
+
+def seed_user_club_prefs(cursor):
+    """
+    Give each student (1–3) a default TRUE preference
+    for every club user (4–15).
+    """
+    for student_id in [1, 2, 3]:
+        for club_id in range(4, 16):
+            cursor.execute(
+                "INSERT INTO USER_CLUB_PREFS (UserID, ClubID, WantsThisClubNotifications) "
+                "VALUES (%s, %s, TRUE)",
+                (student_id, club_id)
+            )
+
+
+def seed_user_event_topic_prefs(cursor):
+    """
+    Give each student (1–3) a default TRUE preference
+    for each of the 10 university event topics.
+    """
+    topics = [
+        "Artificial Intelligence",
+        "Career Development",
+        "Mental Health",
+        "Hackathon",
+        "Sustainability",
+        "Entrepreneurship",
+        "Cultural Festival",
+        "Research",
+        "Gaming",
+        "Community Service"
+    ]
+    for student_id in [1, 2, 3]:
+        for topic in topics:
+            cursor.execute(
+                "INSERT INTO USER_EVENT_TOPIC_PREFS (UserID, Topic, WantsNotification) "
+                "VALUES (%s, %s, TRUE)",
+                (student_id, topic)
+            )
