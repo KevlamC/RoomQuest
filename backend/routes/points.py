@@ -56,7 +56,14 @@ def award_student_points():
             AND IsApproved = TRUE
             AND PointsAwarded = FALSE
             AND UserID = %s
-            AND ADDTIME(CONCAT(Date, ' ', Hour), SEC_TO_TIME(Duration * 3600)) <= NOW()
+            AND (
+                Date < CURDATE()
+                OR
+                (
+                    Date = CURDATE() 
+                    AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) <= CURTIME()
+                )
+            )
         """, (user_id,))
 
         reservations = cur.fetchall()

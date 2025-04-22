@@ -32,7 +32,14 @@ def get_student_reservations():
             WHERE (BookingType = 'student' OR BookingType = 'club')
             AND IsApproved = TRUE
             AND UserID = %s
-            AND ADDTIME(CONCAT(Date, ' ', Hour), SEC_TO_TIME(Duration * 3600)) <= NOW()
+            AND (
+                Date < CURDATE()
+                OR
+                (
+                    Date = CURDATE() 
+                    AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) <= CURTIME()
+                )
+            )
         """, (user_id,))
 
 
