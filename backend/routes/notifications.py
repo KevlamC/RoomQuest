@@ -5,7 +5,8 @@ from datetime import datetime
 notifs_bp = Blueprint("notifications", __name__)
 
 
-@notifs_bp.route("/api/notification/general-to-all", methods=["POST"])
+# General entrypoint for all booking-approval notifications.
+@notifs_bp.route("/api/notification/general-to-all", methods=["POST", "GET"])
 def notification_general_function():
     """
     General entrypoint for all booking‐approval notifications.
@@ -14,8 +15,12 @@ def notification_general_function():
       - approved  (true|false)
     """
     try:
-        booking_id = request.values.get("BookingID", type=int)
-        approved = str(request.values.get("approved", "")).lower() == "true"
+        if request.method == "POST":
+            booking_id = request.values.get("BookingID", type=int)
+            approved = str(request.values.get("approved", "")).lower() == "true"
+        elif request.method == "GET":
+            booking_id = request.args.get("BookingID", type=int)
+            approved = str(request.args.get("approved", "")).lower() == "true"
 
         if not booking_id:
             return jsonify(success=False, message="Missing BookingID"), 400
@@ -137,8 +142,7 @@ def notify_club_booking_rejected(cur, booking):
 
 
 
-
-# Update user notification preferences.
+# Update user notification preferences (POST and GET).
 @notifs_bp.route("/api/notifications/prefs", methods=["POST", "GET"])
 def update_prefs():
     data = request.get_json(silent=True) or request.args
@@ -175,7 +179,7 @@ def update_prefs():
         return jsonify({"error": str(e)}), 500
 
 
-# Get all notifications for a user.
+# Get all notifications for a user (GET).
 @notifs_bp.route("/api/notifications/user", methods=["GET"])
 def get_all_user_notifications():
     try:
@@ -202,8 +206,6 @@ def get_all_user_notifications():
         return jsonify(success=False, message=str(e)), 500
 
 
-
-
 def get_all_student_notifications(cur, user_id):
     cur.execute("""
         SELECT N.NotificationID, N.BookingID, N.Title, N.Message, N.Type, N.Timestamp
@@ -213,9 +215,6 @@ def get_all_student_notifications(cur, user_id):
         ORDER BY N.NotificationID DESC
     """, (user_id,))
     return cur.fetchall()
-
-# ^NOT DONE YET NEEDS PREFERENCES
-
 
 
 def get_all_club_notifications(cur, user_id):
@@ -228,14 +227,8 @@ def get_all_club_notifications(cur, user_id):
     """, (user_id,))
     return cur.fetchall()
 
-# ^NOT DONE YET NEEDS PREFERENCES
 
-
-
-
-
-
-# Get user's upcoming notifications.
+# Get user's upcoming notifications (GET).
 @notifs_bp.route("/api/notifications/user/upcoming", methods=["GET"])
 def get_upcoming_user_notifications():
     student_id = request.args.get("studentID")
@@ -271,7 +264,7 @@ def get_upcoming_user_notifications():
         return jsonify({"error": str(e)}), 500
 
 
-# Delete a specific notification.
+# Delete a specific notification (POST and GET).
 @notifs_bp.route("/api/notifications/delete", methods=["POST", "GET"])
 def delete_notification():
     data = request.get_json(silent=True) or request.args
@@ -321,4 +314,3 @@ def delete_notification():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
