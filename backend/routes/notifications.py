@@ -49,10 +49,10 @@ def notification_general_function():
             notify_student_booking_rejected(cur, booking)
         elif bt = "club" and not approved:
             notify_club_booking_rejected(cur, booking)
-        elif bt = "club_event" and approved:
-            notify_club_event(cur, booking)
-        elif bt = "university_event" and approved:
-            notiy_university_event(cur, booking)
+        # elif bt = "club_event" and approved:
+            # notify_club_event(cur, booking)
+        # elif bt = "university_event" and approved:
+            # notiy_university_event(cur, booking)
         else:
             # extend for 'admin', 'university_event', etc.
             pass
