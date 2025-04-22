@@ -75,7 +75,7 @@ def admin_add_booking():
         course_type = request.args.get('course_type')     # Optional: 'Lecture', 'Tutorial', 'Lab'
 
         if booking_type not in ['admin', 'university_event']:
-            return jsonify({"message": "Invalid booking type. Admin can only book admin or university_event."}), 400
+            return jsonify({"message": "Invalid booking type. Admin can only book 'admin' or 'university_event'."}), 400
 
         course_id = None
         if course_name and session_id and course_type:
@@ -86,18 +86,42 @@ def admin_add_booking():
             """, (course_name, session_id, course_type))
             course_id = cursor.lastrowid
 
-        # Insert TIME_SLOT
+        # Insert into TIME_SLOT
         cursor.execute("""
             INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)
         """, (user_id, date, hour, duration, room, building, booking_type, course_id))
 
+        booking_id = cursor.lastrowid
         connection.commit()
-        return jsonify({"message": "Booking added successfully"}), 200
+
+        booking_info = {
+            "BookingID": booking_id,
+            "UserID": user_id,
+            "Date": date,
+            "Hour": hour,
+            "Duration": duration,
+            "RoomNumber": room,
+            "Building": building,
+            "BookingType": booking_type,
+            "CourseID": course_id,
+            "CourseName": course_name,
+            "SessionID": session_id,
+            "CourseType": course_type,
+            "IsApproved": True
+        }
+
+        return jsonify({
+            "message": "Booking added successfully.",
+            "booking_details": booking_info
+        }), 200
 
     except Exception as e:
         connection.rollback()
-        return jsonify({"message": "Error adding booking", "error": str(e)}), 500
+        return jsonify({
+            "message": "Error adding booking",
+            "error": str(e)
+        }), 500
 
     finally:
         cursor.close()
@@ -116,46 +140,69 @@ def admin_delete_booking():
         session_id = request.args.get('session_id')  # Optional
         course_type = request.args.get('course_type')  # Optional: Lecture, Lab, Tutorial
 
-        # Verify admin by checking the userType in USER table
+        # Verify admin
         cursor.execute("SELECT userType FROM USER WHERE ID = %s", (user_id,))
         result = cursor.fetchone()
-        
         if result is None or result[0] != 'admin':
             return jsonify({"message": "Unauthorized. Only admins can delete bookings."}), 403
 
+        deleted_info = {}
+
         if booking_id:
-            # Delete single booking
+            cursor.execute("SELECT * FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
+            booking_data = cursor.fetchone()
+            if not booking_data:
+                return jsonify({"message": f"No booking found with BookingID {booking_id}."}), 404
+
+            columns = [desc[0] for desc in cursor.description]
+            deleted_info["deleted_booking"] = dict(zip(columns, booking_data))
+
             cursor.execute("DELETE FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
             connection.commit()
-            return jsonify({"message": f"Booking {booking_id} deleted successfully."}), 200
+
+            return jsonify({
+                "message": f"Booking {booking_id} deleted successfully.",
+                "details": deleted_info
+            }), 200
 
         elif course_name and course_type:
+            # Get matching course(s)
             if session_id:
-                # Delete specific session of the course
                 cursor.execute("""
-                    SELECT CourseID FROM COURSE
-                    WHERE CourseName = %s AND SessionID = %s AND Type = %s
+                    SELECT * FROM COURSE WHERE CourseName = %s AND SessionID = %s AND Type = %s
                 """, (course_name, session_id, course_type))
             else:
-                # Delete all sessions of this course and type
                 cursor.execute("""
-                    SELECT CourseID FROM COURSE
-                    WHERE CourseName = %s AND Type = %s
+                    SELECT * FROM COURSE WHERE CourseName = %s AND Type = %s
                 """, (course_name, course_type))
 
-            course_ids = [row[0] for row in cursor.fetchall()]
-            if not course_ids:
+            course_rows = cursor.fetchall()
+            if not course_rows:
                 return jsonify({"message": "No matching course(s) found."}), 404
 
-            # Delete TIME_SLOTs (will cascade delete related EVENT_DETAILS, NOTIFICATIONS, etc.)
-            format_ids = ','.join(['%s'] * len(course_ids))
-            cursor.execute(f"DELETE FROM TIME_SLOT WHERE CourseID IN ({format_ids})", course_ids)
+            course_columns = [desc[0] for desc in cursor.description]
+            deleted_info["deleted_courses"] = [dict(zip(course_columns, row)) for row in course_rows]
+            course_ids = [row[0] for row in course_rows]  # CourseID
 
-            # Delete course records
+            # Get related bookings
+            format_ids = ','.join(['%s'] * len(course_ids))
+            cursor.execute(f"SELECT * FROM TIME_SLOT WHERE CourseID IN ({format_ids})", course_ids)
+            timeslot_rows = cursor.fetchall()
+            if timeslot_rows:
+                timeslot_columns = [desc[0] for desc in cursor.description]
+                deleted_info["deleted_bookings"] = [dict(zip(timeslot_columns, row)) for row in timeslot_rows]
+
+            # Delete bookings
+            cursor.execute(f"DELETE FROM TIME_SLOT WHERE CourseID IN ({format_ids})", course_ids)
+            # Delete courses
             cursor.execute(f"DELETE FROM COURSE WHERE CourseID IN ({format_ids})", course_ids)
 
             connection.commit()
-            return jsonify({"message": f"Deleted course(s) and all associated bookings.", "deleted_course_ids": course_ids}), 200
+
+            return jsonify({
+                "message": "Deleted course(s) and all associated bookings.",
+                "details": deleted_info
+            }), 200
 
         else:
             return jsonify({"message": "Must provide booking_id or course_name + course_type to delete."}), 400
