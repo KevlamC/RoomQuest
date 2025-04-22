@@ -62,77 +62,77 @@ def award_student_points():
         cur = conn.cursor(dictionary=True)
         debug_log.append("Database cursor created.")
 
-        # Run a modified query that includes end time calculations and current time
-        debug_log.append("Executing diagnostic query to fetch evaluated time logic...")
+        # 1) Grab all approved, un‑awarded student bookings for this user
+        debug_log.append("Querying TIME_SLOT for approved & unawarded bookings…")
         cur.execute("""
             SELECT 
-                BookingID, 
-                Hour, 
-                Duration, 
-                ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) AS EndTime,
-                CURTIME() AS NowTime
+                BookingID,
+                UserID,
+                Date,
+                Hour,
+                Duration
             FROM TIME_SLOT
             WHERE BookingType = 'student'
               AND IsApproved = TRUE
               AND PointsAwarded = FALSE
               AND UserID = %s
-              AND Date = CURDATE()
         """, (user_id,))
-        time_check = cur.fetchall()
-        debug_log.append(f"Time diagnostic results: {time_check}")
+        rows = cur.fetchall()
+        debug_log.append(f"MySQL rows fetched: {rows}")
 
-        # Now run the real filtered query
-        query = """
-            SELECT * FROM TIME_SLOT 
-            WHERE (BookingType = 'student')
-              AND IsApproved = TRUE
-              AND PointsAwarded = FALSE
-              AND UserID = %s
-              AND NOT (
-                  Date > CURDATE()
-                  OR (
-                      Date = CURDATE() 
-                      AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) >= CURTIME()
-                  )
-              )
-        """
-        debug_log.append("Executing query to fetch eligible reservations...")
-        cur.execute(query, (user_id,))
-        reservations = cur.fetchall()
-
-        debug_log.append(f"Reservations found: {len(reservations)}")
-        debug_log.append(f"Reservations detail: {reservations}")
+        now = datetime.now()  # your server's local time (America/Edmonton)
+        debug_log.append(f"Current server time: {now}")
 
         total_points = 0
-        for res in reservations:
-            booking_id = res["BookingID"]
-            duration_hours = res["Duration"]
-            earned_points = duration_hours * 20
-            total_points += earned_points
+        to_award = []
 
-            debug_log.append(f"Awarding {earned_points} points for BookingID {booking_id}")
-            cur.execute("UPDATE TIME_SLOT SET PointsAwarded = TRUE WHERE BookingID = %s", (booking_id,))
+        for r in rows:
+            # build the booking start & end datetimes
+            start_dt = datetime.combine(r["Date"], (datetime.min + r["Hour"]).time())
+            end_dt   = start_dt + timedelta(hours=r["Duration"])
+            debug_log.append(
+                f"BookingID {r['BookingID']} → start {start_dt}, end {end_dt}"
+            )
+
+            if now >= end_dt:
+                debug_log.append(f"  → Eligible (now ≥ end)")
+                to_award.append(r)
+            else:
+                debug_log.append(f"  → **Not** yet ended (now < end)")
+
+        # 2) Award points only for the truly‑ended bookings
+        for r in to_award:
+            pts = r["Duration"] * 20
+            total_points += pts
+            debug_log.append(f"Awarding {pts} points for BookingID {r['BookingID']}")
+            cur.execute(
+                "UPDATE TIME_SLOT SET PointsAwarded = TRUE WHERE BookingID = %s",
+                (r["BookingID"],)
+            )
 
         if total_points > 0:
             debug_log.append(f"Updating STUDENT points: +{total_points} for UserID {user_id}")
-            cur.execute("UPDATE STUDENT SET Points = Points + %s WHERE ID = %s", (total_points, user_id))
+            cur.execute(
+                "UPDATE STUDENT SET Points = Points + %s WHERE ID = %s",
+                (total_points, user_id)
+            )
         else:
-            debug_log.append("No points to award.")
+            debug_log.append("No points to award after Python time check.")
 
         conn.commit()
         cur.close()
         conn.close()
-        debug_log.append("Database changes committed and connection closed.")
+        debug_log.append("Database committed & connection closed.")
 
         return jsonify({
             "success": True,
             "awarded_points": total_points,
-            "message": f"Points awarded for {len(reservations)} past reservations.",
+            "message": f"Points awarded for {len(to_award)} past reservations.",
             "log": debug_log
         }), 200
 
     except Exception as e:
-        debug_log.append(f"Exception occurred: {str(e)}")
+        debug_log.append(f"Exception: {e}")
         return jsonify({
             "success": False,
             "message": str(e),
