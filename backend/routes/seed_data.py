@@ -165,7 +165,7 @@ def seed_topics(cursor):
         (10, "Community Service"),
     ]
     for topic_id, name in topics:
-        cursor.execute("INSERT IGNORE INTO TOPICS (TopicID, Topic) VALUES (%s, %s)", (topic_id, name))
+        cursor.execute("INSERT IGNORE INTO EVENT_TOPICS (TopicID, Topic) VALUES (%s, %s)", (topic_id, name))
 
 
 def seed_event_details_and_topics(cursor):
