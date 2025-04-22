@@ -148,7 +148,8 @@ def init_db():
         CREATE TABLE NOTIFICATIONS (
             NotificationID INT PRIMARY KEY AUTO_INCREMENT,
             BookingID INT,
-            Message TEXT,
+            Title VARCHAR(255) DEFAULT NULL,
+            Message TEXT DEFAULT NULL,
             Type ENUM('booking_approved', 'booking_cancelled', 'club_event', 'university_event', 'points_confirmation'),
             FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE
         );
