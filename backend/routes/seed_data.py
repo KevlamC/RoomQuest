@@ -83,7 +83,7 @@ def seed_timeslots(cursor):
         {"UserID": 1, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "101",  "Building": "Engineering", "BookingType": "student", "CourseID": None, "IsApproved": True},
         {"UserID": 2, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "202",  "Building": "Science",     "BookingType": "student", "CourseID": None, "IsApproved": False},
         {"UserID": 4, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "303",  "Building": "Library",     "BookingType": "club",    "CourseID": None, "IsApproved": True},
-        {"UserID": 5, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "606",  "Building": "Medicine",    "BookingType": "club",    "CourseID": None, "IsApproved": False},
+        {"UserID": 5, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "606",  "Building": "Medicine",    "BookingType": "club",    "CourseID": None, "IsApproved": True},
         {"UserID": 3, "Date": "2025-04-21", "Hour": "20:00:00", "Duration": 2, "RoomNumber": "100A", "Building": "Commerce",    "BookingType": "student", "CourseID": None, "IsApproved": True},
     ]
     
@@ -135,49 +135,49 @@ def seed_notifications_and_prefs(cursor):
     # Assign club event to club 4
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
 
-# def seed_events_search(cursor):
-    # # Clean up previous test data
-    # cursor.execute("DELETE FROM EVENT_TOPICS")
-    # cursor.execute("DELETE FROM EVENT_DETAILS")
+def seed_events_search(cursor):
+    # Clean up previous test data
+    cursor.execute("DELETE FROM EVENT_TOPICS")
+    cursor.execute("DELETE FROM EVENT_DETAILS")
 
-    # # Map club user IDs to booking IDs (from TIME_SLOT)
-    # # Club 4 (club1@example.com) has an approved booking in Library (BookingID 3)
-    # # Club 5 (club2@example.com) has a pending booking in Medicine (BookingID 4)
+    # Map club user IDs to booking IDs (from TIME_SLOT)
+    # Club 4 (club1@example.com) has an approved booking in Library (BookingID 3)
+    # Club 5 (club2@example.com) has a pending booking in Medicine (BookingID 4)
 
-    # events = [
-    #     {
-    #         "BookingID": 3,
-    #         "ClubID": 4,
-    #         "EventName": "Chess",
-    #         "Description": "Compete in a thrilling chess battle!",
-    #         "Link": "http://example.com/chess",
-    #         "EventType": "club",
-    #         "IsPublic": True,
-    #         "Topics": "Gaming"
-    #     },
-    #     {
-    #         "BookingID": 4,
-    #         "ClubID": 5,
-    #         "EventName": "Healthy",
-    #         "Description": "Learn about mental health from experts.",
-    #         "Link": "http://example.com/healthtalk",
-    #         "EventType": "club",
-    #         "IsPublic": True,
-    #         "Topics": "Hackathon"
-    #     }
-    # ]
+    events = [
+        {
+            "BookingID": 3,
+            "ClubID": 4,
+            "EventName": "Chess",
+            "Description": "Compete in a thrilling chess battle!",
+            "Link": "http://example.com/chess",
+            "EventType": "club",
+            "IsPublic": True,
+            "Topic": "Gaming"
+        },
+        {
+            "BookingID": 4,
+            "ClubID": 5,
+            "EventName": "Healthy",
+            "Description": "Learn about mental health from experts.",
+            "Link": "http://example.com/healthtalk",
+            "EventType": "club",
+            "IsPublic": True,
+            "Topic": "Hackathon"
+        }
+    ]
 
-    # for event in events:
-    #     cursor.execute(
-    #         """INSERT INTO EVENT_DETAILS (BookingID, ClubID, EventName, Description, Link, EventType, IsPublic)
-    #            VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-    #         (event["BookingID"], event["ClubID"], event["EventName"], event["Description"],
-    #          event["Link"], event["EventType"], event["IsPublic"])
-    #     )
-    #     for topic in event["Topics"]:
-    #         cursor.execute(
-    #             "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
-    #             (event["BookingID"], topic)
-    #         )
+    for event in events:
+        cursor.execute(
+            """INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            (event["BookingID"], event["EventName"], event["Description"], event["IsPublic"],
+             event["Link"], event["EventType"], event["ClubID"])
+        )
+        for topic in event["Topic"]:
+            cursor.execute(
+                "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
+                (event["BookingID"], topic)
+            )
 
 
