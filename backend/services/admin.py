@@ -56,13 +56,7 @@ def approve_booking():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Add a new schedule (Lecture, Tutorial, Reservation, Lab).
-from flask import Blueprint, request, jsonify
-from backend.config import get_connection
-
-admin_actions_bp = Blueprint('admin_actions', __name__)
-
-@admin_actions_bp.route('/api/admin/add-booking', methods=['POST', 'GET'])
+@admin_bp.route('/api/admin/add-booking', methods=['POST', 'GET'])
 def admin_add_booking():
     try:
         connection = get_connection()
@@ -110,7 +104,7 @@ def admin_add_booking():
         connection.close()
 
 # Delete a reservation/lecture/tutorial/lab (no ownership check needed).
-@admin_actions_bp.route('/api/admin/delete-booking', methods=['POST', 'GET'])
+@admin_bp.route('/api/admin/delete-booking', methods=['POST', 'GET'])
 def admin_delete_booking():
     try:
         connection = get_connection()
@@ -171,3 +165,7 @@ def admin_delete_booking():
     finally:
         cursor.close()
         connection.close()
+
+@admin_bp.route("/admin/test")
+def test_admin():
+    return "Admin route works!"

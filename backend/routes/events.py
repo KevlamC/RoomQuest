@@ -1,10 +1,5 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
-
-event_search_bp = Blueprint('event_search', __name__)
-
-from flask import Blueprint, request, jsonify
-from backend.config import get_connection
 import datetime
 
 event_search_bp = Blueprint('event_search', __name__)
