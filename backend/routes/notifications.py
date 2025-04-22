@@ -5,7 +5,7 @@ from datetime import datetime
 notifs_bp = Blueprint("notifications", __name__)
 
 
-@points_bp.route("/api/notification/general-to-all", methods=["POST"])
+@notifs_bp.route("/api/notification/general-to-all", methods=["POST"])
 def notification_general_function():
     """
     General entrypoint for all booking‐approval notifications.
