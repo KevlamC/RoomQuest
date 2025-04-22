@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 points_bp = Blueprint('points', __name__)
 
@@ -62,15 +63,9 @@ def award_student_points():
         cur = conn.cursor(dictionary=True)
         debug_log.append("Database cursor created.")
 
-        # 1) Grab all approved, un‑awarded student bookings for this user
-        debug_log.append("Querying TIME_SLOT for approved & unawarded bookings…")
+        # 1) Fetch all approved & un‑awarded slots for this user
         cur.execute("""
-            SELECT 
-                BookingID,
-                UserID,
-                Date,
-                Hour,
-                Duration
+            SELECT BookingID, Date, Hour, Duration
             FROM TIME_SLOT
             WHERE BookingType = 'student'
               AND IsApproved = TRUE
@@ -78,29 +73,38 @@ def award_student_points():
               AND UserID = %s
         """, (user_id,))
         rows = cur.fetchall()
-        debug_log.append(f"MySQL rows fetched: {rows}")
+        debug_log.append(f"Rows fetched: {rows}")
 
-        now = datetime.now()  # your server's local time (America/Edmonton)
-        debug_log.append(f"Current server time: {now}")
+        # 2) Use Canada/Mountain timezone for comparisons
+        tz = ZoneInfo("Canada/Mountain")
+        now = datetime.now(tz)
+        debug_log.append(f"Current time (Canada/Mountain): {now.isoformat()}")
 
         total_points = 0
         to_award = []
 
         for r in rows:
-            # build the booking start & end datetimes
-            start_dt = datetime.combine(r["Date"], (datetime.min + r["Hour"]).time())
-            end_dt   = start_dt + timedelta(hours=r["Duration"])
-            debug_log.append(
-                f"BookingID {r['BookingID']} → start {start_dt}, end {end_dt}"
+            # Build timezone-aware start and end datetimes
+            h = (datetime.min + r["Hour"]).time()
+            start_dt = datetime(
+                year=r["Date"].year,
+                month=r["Date"].month,
+                day=r["Date"].day,
+                hour=h.hour,
+                minute=h.minute,
+                second=h.second,
+                tzinfo=tz
             )
+            end_dt = start_dt + timedelta(hours=r["Duration"])
+            debug_log.append(f"BookingID {r['BookingID']} → start {start_dt.isoformat()}, end {end_dt.isoformat()}")
 
             if now >= end_dt:
-                debug_log.append(f"  → Eligible (now ≥ end)")
+                debug_log.append("  → Eligible (now ≥ end)")
                 to_award.append(r)
             else:
-                debug_log.append(f"  → **Not** yet ended (now < end)")
+                debug_log.append("  → Not yet ended (now < end)")
 
-        # 2) Award points only for the truly‑ended bookings
+        # 3) Award points
         for r in to_award:
             pts = r["Duration"] * 20
             total_points += pts
@@ -117,7 +121,7 @@ def award_student_points():
                 (total_points, user_id)
             )
         else:
-            debug_log.append("No points to award after Python time check.")
+            debug_log.append("No points to award after zone‑aware check.")
 
         conn.commit()
         cur.close()
@@ -138,7 +142,7 @@ def award_student_points():
             "message": str(e),
             "log": debug_log
         }), 500
-
+    
 # 🔹 Get club points
 @points_bp.route('/api/club/points', methods=['GET'])
 def get_club_points():
