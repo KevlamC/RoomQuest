@@ -156,12 +156,12 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE USER_CLUB_PREFS (
-            UserID INT NOT NULL,               -- User (student or club)
+            UserID INT NOT NULL,
             ClubName VARCHAR(255) NOT NULL,
-            WantsThisClubNotifications BOOLEAN NOT NULL DEFAULT TRUE,  -- Whether the user wants notifications for this club
-            PRIMARY KEY (UserID, ClubID),      -- Unique combination of user and club
+            WantsThisClubNotifications BOOLEAN NOT NULL DEFAULT TRUE,
+            PRIMARY KEY (UserID, ClubName),
             FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (ClubName) REFERENCES CLUB(ClubName) ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
 
