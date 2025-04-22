@@ -26,8 +26,7 @@ def init_db():
         cursor.execute("DROP TABLE IF EXISTS CLUB;")
         cursor.execute("DROP TABLE IF EXISTS USER;")
         cursor.execute("DROP TABLE IF EXISTS ROOMS;")
-        cursor.execute("DROP TABLE USER_EVENT_TOPIC_PREFS")
-        
+
         # Recreate all tables
         cursor.execute("""
         CREATE TABLE USER (
