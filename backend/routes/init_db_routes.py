@@ -146,6 +146,16 @@ def init_db():
                FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE
            );
            """)
+
+        cursor.execute("""
+            CREATE TABLE USER_EVENT_TOPIC_PREFS (
+            UserID INT NOT NULL,
+            Topic VARCHAR(255) NOT NULL,
+            PRIMARY KEY (UserID, Topic),
+            FOREIGN KEY (UserID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+
+        
         
         cursor.execute("""
            CREATE TABLE NOTIFICATIONS (
