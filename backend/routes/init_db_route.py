@@ -135,6 +135,15 @@ def init_db():
         """)
 
         cursor.execute("""
+        CREATE TABLE EVENT_TOPICS (
+            BookingID INT NOT NULL,
+            Topic VARCHAR(255) NOT NULL,
+            PRIMARY KEY (BookingID, Topic),
+            FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
         CREATE TABLE NOTIFICATIONS (
             NotificationID INT PRIMARY KEY AUTO_INCREMENT,
             BookingID INT,
