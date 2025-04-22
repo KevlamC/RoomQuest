@@ -140,10 +140,14 @@ def seed_events_search(cursor):
     cursor.execute("DELETE FROM EVENT_TOPICS")
     cursor.execute("DELETE FROM EVENT_DETAILS")
 
-    # Map club user IDs to booking IDs (from TIME_SLOT)
-    # Club 4 (club1@example.com) has an approved booking in Library (BookingID 3)
-    # Club 5 (club2@example.com) has a pending booking in Medicine (BookingID 4)
+    # Insert some dummy TIME_SLOT data for the BookingIDs that will be used in events
+    cursor.execute("""
+        INSERT INTO TIME_SLOT (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType)
+        VALUES (3, 4, '2025-04-25', '10:00:00', 2, 'A101', 'Library', 'club'),
+               (4, 5, '2025-04-26', '14:00:00', 1, 'B202', 'Medicine', 'club');
+    """)
 
+    # Event Data
     events = [
         {
             "BookingID": 3,
