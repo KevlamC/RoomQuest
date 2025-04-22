@@ -26,30 +26,21 @@ def run_seeding():
 
 def seed_users(cursor):
     users = [
-        {"ID": 1, "Email": "student1@example.com", "Username": "student1", "Password": "password1", "userType": "student"},
-        {"ID": 2, "Email": "student2@example.com", "Username": "student2", "Password": "password2", "userType": "student"},
-        {"ID": 3, "Email": "student3@example.com", "Username": "student3", "Password": "password3", "userType": "student"},
-        {"ID": 4, "Email": "club1@example.com",    "Username": "club1",    "Password": "password4", "userType": "club"},
-        {"ID": 5, "Email": "club2@example.com",    "Username": "club2",    "Password": "password5", "userType": "club"},
-        # Add your admin here if needed:
-        # {"ID": 99, "Email": "youradmin@example.com", "Username": "youradmin", "Password": "securepass", "userType": "admin"},
+        {"ID": 1, "Email": "student1@x.com", "Username": "s1", "Password": "p1", "userType": "student"},
+        {"ID": 2, "Email": "student2@x.com", "Username": "s2", "Password": "p2", "userType": "student"},
+        {"ID": 3, "Email": "student3@x.com", "Username": "s3", "Password": "p3", "userType": "student"},
+        {"ID": 4, "Email": "club1@x.com",    "Username": "c1", "Password": "p4", "userType": "club"},
+        {"ID": 5, "Email": "club2@x.com",    "Username": "c2", "Password": "p5", "userType": "club"},
     ]
-    
-    for user in users:
+    for u in users:
         cursor.execute(
-            "INSERT INTO USER (ID, Email, Username, Password, userType) VALUES (%s, %s, %s, %s, %s)",
-            (user["ID"], user["Email"], user["Username"], user["Password"], user["userType"])
+            "INSERT INTO USER (ID,Email,Username,Password,userType) VALUES (%s,%s,%s,%s,%s)",
+            (u["ID"], u["Email"], u["Username"], u["Password"], u["userType"])
         )
-        if user["userType"] == "student":
-            cursor.execute(
-                "INSERT INTO STUDENT (ID, Points) VALUES (%s, 0)",
-                (user["ID"],)
-            )
-        elif user["userType"] == "club":
-            cursor.execute(
-                "INSERT INTO CLUB (ID, Points) VALUES (%s, 0)",
-                (user["ID"],)
-            )
+        if u["userType"] == "student":
+            cursor.execute("INSERT INTO STUDENT (ID,Points) VALUES (%s,0)", (u["ID"],))
+        else:
+            cursor.execute("INSERT INTO CLUB (ID,Points) VALUES (%s,0)", (u["ID"],))
 
 
 def seed_rooms_and_features(cursor):
@@ -80,18 +71,24 @@ def seed_rooms_and_features(cursor):
 
 def seed_timeslots(cursor):
     timeslots = [
-        {"UserID": 1, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "101",  "Building": "Engineering", "BookingType": "student", "CourseID": None, "IsApproved": True},
-        {"UserID": 2, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "202",  "Building": "Science",     "BookingType": "student", "CourseID": None, "IsApproved": False},
-        {"UserID": 4, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "303",  "Building": "Library",     "BookingType": "club_event",    "CourseID": None, "IsApproved": True},
-        {"UserID": 5, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "606",  "Building": "Medicine",    "BookingType": "club",    "CourseID": None, "IsApproved": True},
-        {"UserID": 3, "Date": "2025-04-23", "Hour": "20:00:00", "Duration": 2, "RoomNumber": "100A", "Building": "Commerce",    "BookingType": "student", "CourseID": None, "IsApproved": True},
+        {"UserID": 1, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3,
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "student",   "CourseID": None, "IsApproved": True},
+        {"UserID": 2, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3,
+         "RoomNumber": "202", "Building": "Science",     "BookingType": "student",   "CourseID": None, "IsApproved": False},
+        {"UserID": 4, "Date": "2025-04-23", "Hour": "18:00:00", "Duration": 2,
+         "RoomNumber": "303", "Building": "Library",     "BookingType": "club_event","CourseID": None, "IsApproved": True},
+        {"UserID": 5, "Date": "2025-04-24", "Hour": "19:00:00", "Duration": 4,
+         "RoomNumber": "404", "Building": "Business",    "BookingType": "club_event","CourseID": None, "IsApproved": True},
     ]
-    
     for ts in timeslots:
         cursor.execute(
-            "INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (ts["UserID"], ts["Date"], ts["Hour"], ts["Duration"], ts["RoomNumber"], ts["Building"], ts["BookingType"], ts["CourseID"], ts["IsApproved"])
+            "INSERT INTO TIME_SLOT (UserID,Date,Hour,Duration,RoomNumber,Building,BookingType,CourseID,IsApproved)"
+            " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+            (ts["UserID"], ts["Date"], ts["Hour"], ts["Duration"],
+             ts["RoomNumber"], ts["Building"], ts["BookingType"],
+             ts["CourseID"], ts["IsApproved"])
         )
+
 
 
 def seed_notifications_and_prefs(cursor):
@@ -137,28 +134,25 @@ def seed_notifications_and_prefs(cursor):
 
 
 def seed_event_details_and_topics(cursor):
-    # Assume BookingID 3 is a club event for ClubID 4
+    # Club 1’s event (BookingID 3)
     cursor.execute("""
-        INSERT INTO EVENT_DETAILS (BookingID, ClubID, EventType)
-        VALUES (3, 4, 'club')
+        INSERT INTO EVENT_DETAILS (BookingID,ClubID,EventType,EventName)
+        VALUES (3,4,'club','AI & Career Fair')
     """)
+    for topic in ["Artificial Intelligence","Career Development"]:
+        cursor.execute("INSERT INTO EVENT_TOPICS (BookingID,Topic) VALUES (3,%s)", (topic,))
 
-    # Add topics to that club event
-    topics = ['Artificial Intelligence', 'Career Development']
-    for topic in topics:
-        cursor.execute("""
-            INSERT INTO EVENT_TOPICS (BookingID, Topic)
-            VALUES (3, %s)
-        """, (topic,))
+    # Topic preferences for students
+    for sid, topic in [(1,"Artificial Intelligence"),(1,"Career Development"),(2,"Artificial Intelligence")]:
+        cursor.execute("INSERT INTO USER_EVENT_TOPIC_PREFS (UserID,Topic) VALUES (%s,%s)", (sid,topic))
 
-    # Student 1 likes both, Student 2 likes one, Student 3 likes none
-    topic_prefs = [
-        (1, 'Artificial Intelligence'),
-        (1, 'Career Development'),
-        (2, 'Artificial Intelligence'),
-    ]
-    for student_id, topic in topic_prefs:
-        cursor.execute("""
-            INSERT INTO USER_EVENT_TOPIC_PREFS (UserID, Topic)
-            VALUES (%s, %s)
-        """, (student_id, topic))
+    # Club 2’s event (BookingID 4)
+    cursor.execute("""
+        INSERT INTO EVENT_DETAILS (BookingID,ClubID,EventType,EventName)
+        VALUES (4,5,'club','Business Networking Night')
+    """)
+    for topic in ["Career Development","Entrepreneurship"]:
+        cursor.execute("INSERT INTO EVENT_TOPICS (BookingID,Topic) VALUES (4,%s)", (topic,))
+
+    # Add student 3’s preference for Entrepreneurship
+    cursor.execute("INSERT INTO USER_EVENT_TOPIC_PREFS (UserID,Topic) VALUES (3,'Entrepreneurship')")
