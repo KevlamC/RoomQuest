@@ -111,7 +111,7 @@ def init_db():
             Duration INT DEFAULT 1,
             RoomNumber VARCHAR(255) NOT NULL,
             Building VARCHAR(255) NOT NULL,
-            BookingType ENUM('student', 'club', 'course', 'admin', 'university_event') NOT NULL,
+            BookingType ENUM('student', 'club', 'club_event', 'admin', 'university_event') NOT NULL,
             CourseID INT DEFAULT NULL,
             PointsAwarded BOOLEAN DEFAULT FALSE,
             IsApproved BOOLEAN DEFAULT FALSE,
