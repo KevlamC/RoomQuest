@@ -145,6 +145,28 @@ def init_db():
         """)
 
         cursor.execute("""
+        CREATE TABLE USER_EVENT_TOPIC_PREFS (
+            UserID INT NOT NULL,               -- User (student or club)
+            Topic VARCHAR(255) NOT NULL,        -- Event Topic (like 'Artificial Intelligence', 'Hackathon', etc.)
+            WantsNotification BOOLEAN NOT NULL DEFAULT TRUE,  -- Whether the user wants notifications for this topic
+            PRIMARY KEY (UserID, Topic),       -- Unique combination of user and topic
+            FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+        cursor.execute("""
+        CREATE TABLE USER_CLUB_PREFS (
+            UserID INT NOT NULL,               -- User (student or club)
+            ClubName VARCHAR(255) NOT NULL,
+            WantsThisClubNotifications BOOLEAN NOT NULL DEFAULT TRUE,  -- Whether the user wants notifications for this club
+            PRIMARY KEY (UserID, ClubID),      -- Unique combination of user and club
+            FOREIGN KEY (UserID) REFERENCES USER(ID) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (ClubID) REFERENCES CLUB(ID) ON DELETE CASCADE ON UPDATE CASCADE
+        );
+        """)
+
+
+        cursor.execute("""
         CREATE TABLE NOTIFICATIONS (
             NotificationID INT PRIMARY KEY AUTO_INCREMENT,
             BookingID INT,
@@ -157,8 +179,7 @@ def init_db():
 
         cursor.execute("""
         CREATE TABLE NOTIFICATION_PREFS (
-            StudentID INT,
-            ClubID INT,
+            UserID INT,
             WantsClubNotifications BOOLEAN NOT NULL DEFAULT TRUE,
             WantsUniversityNotifications BOOLEAN NOT NULL DEFAULT TRUE,
             PRIMARY KEY (StudentID, ClubID),
