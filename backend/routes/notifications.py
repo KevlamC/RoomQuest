@@ -47,7 +47,7 @@ def notification_general_function():
             # notify_group_booking(cur, booking)
         elif bt == "student" and not approved:
             notify_student_booking_rejected(cur, booking)
-        elif bt = "club" and not approved:
+        elif bt == "club" and not approved:
             notify_club_booking_rejected(cur, booking)
         # elif bt = "club_event" and approved:
             # notify_club_event(cur, booking)
