@@ -219,4 +219,3 @@ def init_db():
     
     except Exception as e:
         return jsonify({"message": "Error occurred", "error": str(e)})
-
