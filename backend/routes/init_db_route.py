@@ -111,7 +111,7 @@ def init_db():
             Duration INT DEFAULT 1,
             RoomNumber VARCHAR(255) NOT NULL,
             Building VARCHAR(255) NOT NULL,
-            BookingType ENUM('student', 'club', 'course', 'admin', 'university_event') NOT NULL,
+            BookingType ENUM('student', 'club', 'club_event', 'admin', 'university_event') NOT NULL,
             CourseID INT DEFAULT NULL,
             PointsAwarded BOOLEAN DEFAULT FALSE,
             IsApproved BOOLEAN DEFAULT FALSE,
@@ -148,8 +148,8 @@ def init_db():
         CREATE TABLE NOTIFICATIONS (
             NotificationID INT PRIMARY KEY AUTO_INCREMENT,
             BookingID INT,
-            Title VARCHAR(255),
-            Message TEXT,
+            Title VARCHAR(255) DEFAULT NULL,
+            Message TEXT DEFAULT NULL,
             Type ENUM('booking_approved', 'booking_cancelled', 'club_event', 'university_event', 'points_confirmation'),
             FOREIGN KEY (BookingID) REFERENCES TIME_SLOT(BookingID) ON DELETE CASCADE ON UPDATE CASCADE
         );
