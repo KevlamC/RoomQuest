@@ -212,6 +212,7 @@ def get_all_student_notifications(cur, user_id):
         FROM NOTIFICATIONS N
         JOIN GETS_STUDENT GS ON N.NotificationID = GS.NotificationID
         WHERE GS.StudentID = %s
+        AND N.Type IN ('booking_approved', 'booking_cancelled')
         ORDER BY N.NotificationID DESC
     """, (user_id,))
     return cur.fetchall()
@@ -223,6 +224,7 @@ def get_all_club_notifications(cur, user_id):
         FROM NOTIFICATIONS N
         JOIN GETS_CLUB GC ON N.NotificationID = GC.NotificationID
         WHERE GC.ClubID = %s
+        AND N.Type IN ('booking_approved', 'booking_cancelled')
         ORDER BY N.NotificationID DESC
     """, (user_id,))
     return cur.fetchall()
