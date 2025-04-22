@@ -56,12 +56,12 @@ def award_student_points():
             AND IsApproved = TRUE
             AND PointsAwarded = FALSE
             AND UserID = %s
-            AND (
-                Date < CURDATE()
+            AND NOT (
+                Date > CURDATE()
                 OR
                 (
                     Date = CURDATE() 
-                    AND (ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) <= CURTIME())
+                    AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) >= CURTIME()
                 )
             )
         """, (user_id,))
