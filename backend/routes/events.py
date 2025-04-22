@@ -9,11 +9,10 @@ def search_events():
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Get query parameters
         event_name = request.args.get('event_name')
         club_name = request.args.get('club_name')
-        date = request.args.get('date')          # format YYYY-MM-DD
-        hour = request.args.get('hour')          # format HH:MM:SS
+        date = request.args.get('date')
+        hour = request.args.get('hour')
         building = request.args.get('building')
         room = request.args.get('room')
         topic = request.args.get('topic')
@@ -62,6 +61,11 @@ def search_events():
 
         cursor.execute(query, tuple(values))
         results = cursor.fetchall()
+
+        # Convert Duration if needed
+        for row in results:
+            if 'Duration' in row and hasattr(row['Duration'], 'total_seconds'):
+                row['Duration'] = int(row['Duration'].total_seconds() // 3600)
 
         cursor.close()
         connection.close()
