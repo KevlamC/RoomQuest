@@ -135,36 +135,48 @@ def seed_notifications_and_prefs(cursor):
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
 
 def seed_events_search(cursor):
-    event_details_data = [
-    {"BookingID": 101, "EventName": "Hackathon", "Description": "Annual student hackathon", "IsPublic": True, "Link": "https://hackathon.com", "EventType": "club", "ClubID": 4},
-    {"BookingID": 102, "EventName": "Artificial Intelligence", "Description": "Talks on AI", "IsPublic": True, "Link": "https://ai.com", "EventType": "university", "ClubID": None},
-    {"BookingID": 103, "EventName": "Mental Health", "Description": "Well-being & self-care", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
-    {"BookingID": 104, "EventName": "Entrepreneurship", "Description": "Startup & pitch night", "IsPublic": True, "Link": "https://startup.com", "EventType": "club", "ClubID": 4},
-    {"BookingID": 105, "EventName": "Sustainability", "Description": "Campus green day", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None}
-    ] 
+    # Clean up previous test data
+    cursor.execute("DELETE FROM EVENT_TOPICS")
+    cursor.execute("DELETE FROM EVENT_DETAILS")
 
-    event_topics_data = [
-    {"BookingID": 101, "Topic": "Hackathon"},
-    {"BookingID": 102, "Topic": "Artificial Intelligence"},
-    {"BookingID": 103, "Topic": "Mental Health"},
-    {"BookingID": 104, "Topic": "Entrepreneurship"},
-    {"BookingID": 105, "Topic": "Sustainability"}
+    # Map club user IDs to booking IDs (from TIME_SLOT)
+    # Club 4 (club1@example.com) has an approved booking in Library (BookingID 3)
+    # Club 5 (club2@example.com) has a pending booking in Medicine (BookingID 4)
+
+    events = [
+        {
+            "BookingID": 3,
+            "ClubID": 4,
+            "EventName": "Chess Tournament",
+            "Description": "Compete in a thrilling chess battle!",
+            "Link": "http://example.com/chess",
+            "EventType": "Tournament",
+            "IsPublic": True,
+            "Topics": ["games", "competition"]
+        },
+        {
+            "BookingID": 4,
+            "ClubID": 5,
+            "EventName": "Health Awareness Talk",
+            "Description": "Learn about mental health from experts.",
+            "Link": "http://example.com/healthtalk",
+            "EventType": "Seminar",
+            "IsPublic": True,
+            "Topics": ["wellness", "education"]
+        }
     ]
 
-    timeslots = [
-    {"BookingID": 101, "UserID": 4, "Date": "2025-05-01", "Hour": "10:00:00", "Duration": 4, "RoomNumber": "101", "Building": "Engineering", "BookingType": "club", "CourseID": None, "IsApproved": True},
-    {"BookingID": 102, "UserID": 987654321, "Date": "2025-05-02", "Hour": "13:00:00", "Duration": 2, "RoomNumber": "201", "Building": "Science", "BookingType": "university_event", "CourseID": None, "IsApproved": True},
-    {"BookingID": 103, "UserID": 5, "Date": "2025-05-03", "Hour": "14:00:00", "Duration": 3, "RoomNumber": "303", "Building": "Health Center", "BookingType": "club", "CourseID": None, "IsApproved": True},
-    {"BookingID": 104, "UserID": 4, "Date": "2025-05-04", "Hour": "11:00:00", "Duration": 3, "RoomNumber": "100", "Building": "Business", "BookingType": "club", "CourseID": None, "IsApproved": True},
-    {"BookingID": 105, "UserID": 987654321, "Date": "2025-05-05", "Hour": "09:00:00", "Duration": 2, "RoomNumber": "200", "Building": "Community Hall", "BookingType": "university_event", "CourseID": None, "IsApproved": True},
-    ]
+    for event in events:
+        cursor.execute(
+            """INSERT INTO EVENT_DETAILS (BookingID, ClubID, EventName, Description, Link, EventType, IsPublic)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            (event["BookingID"], event["ClubID"], event["EventName"], event["Description"],
+             event["Link"], event["EventType"], event["IsPublic"])
+        )
+        for topic in event["Topics"]:
+            cursor.execute(
+                "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
+                (event["BookingID"], topic)
+            )
 
-    users = [
-    {"ID": 1, "Email": "student1@example.com", "Username": "student1", "Password": "pass123", "userType": "student"},
-    {"ID": 2, "Email": "student2@example.com", "Username": "student2", "Password": "pass123", "userType": "student"},
-    {"ID": 3, "Email": "student3@example.com", "Username": "student3", "Password": "pass123", "userType": "student"},
-    {"ID": 4, "Email": "club1@example.com", "Username": "clubOne",   "Password": "clubpass", "userType": "club"},
-    {"ID": 5, "Email": "club2@example.com", "Username": "clubTwo",   "Password": "clubpass", "userType": "club"},
-    {"ID": 987654321, "Email": "admin@university.edu", "Username": "admin1", "Password": "adminpass123", "userType": "admin"}
-    ]
 
