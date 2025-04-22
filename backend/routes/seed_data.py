@@ -13,6 +13,7 @@ def run_seeding():
         seed_rooms_and_features(cursor)
         seed_timeslots(cursor)
         seed_notifications_and_prefs(cursor)
+        seed_events_search(cursor)
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
     except Exception as e:
