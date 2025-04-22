@@ -13,7 +13,6 @@ def run_seeding():
         seed_rooms_and_features(cursor)
         seed_timeslots(cursor)
         seed_notifications_and_prefs(cursor)
-        seed_events_search(cursor)
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
     except Exception as e:
@@ -134,41 +133,3 @@ def seed_notifications_and_prefs(cursor):
 
     # Assign club event to club 4
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
-
-def seed_events_search(cursor):
-    # Clean up previous test data
-    cursor.execute("DELETE FROM EVENT_TOPICS")
-    cursor.execute("DELETE FROM EVENT_DETAILS")
-    cursor.execute("DELETE FROM TIME_SLOT WHERE UserID IN (4, 5)")  # Make sure any old bookings from those users are gone
-
-    # Step 1: Insert approved and pending bookings for Club 4 and Club 5
-    cursor.execute("""
-        INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, IsApproved)
-        VALUES 
-        (4, '2025-04-25', '10:00:00', 2, 'A101', 'Library', 'club', TRUE),
-        (5, '2025-04-26', '14:00:00', 1, 'B202', 'Medicine', 'club', FALSE)
-    """)
-
-    # Step 2: Get the auto-generated BookingIDs
-    cursor.execute("SELECT BookingID FROM TIME_SLOT WHERE UserID = 4 AND RoomNumber = 'A101' AND Building = 'Library'")
-    booking_id1 = cursor.fetchone()['BookingID']
-
-    cursor.execute("SELECT BookingID FROM TIME_SLOT WHERE UserID = 5 AND RoomNumber = 'B202' AND Building = 'Medicine'")
-    booking_id2 = cursor.fetchone()['BookingID']
-
-    # Step 3: Insert into EVENT_DETAILS using retrieved BookingIDs
-    cursor.execute(
-        """INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
-           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-        (booking_id1, "Chess", "Compete in a thrilling chess battle!", "http://example.com/chess", "club", 4)
-    )
-    cursor.execute(
-        """INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
-           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-        (booking_id2, "Healthy", "Learn about mental health from experts.", "http://example.com/healthtalk", "club", 5)
-    )
-
-    # Step 4: Insert topics
-    cursor.execute("INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)", (booking_id1, "Gaming"))
-    cursor.execute("INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)", (booking_id2, "Hackathon"))
-
