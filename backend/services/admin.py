@@ -75,9 +75,6 @@ def admin_add_booking():
         session_id = request.args.get('session_id')       # Optional
         course_type = request.args.get('course_type')     # Optional: 'Lecture', 'Tutorial', 'Lab'
 
-        if booking_type not in ['admin', 'university_event']:
-            return jsonify({"message": "Invalid booking type. Admin can only book 'admin' or 'university_event'."}), 400
-
         course_id = None
         if course_name and session_id and course_type:
             # Insert into COURSE table
