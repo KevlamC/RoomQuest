@@ -53,8 +53,10 @@ def award_student_points():
         cur.execute("""
             SELECT * FROM TIME_SLOT 
             WHERE (BookingType = 'student' OR BookingType = 'club')
-            AND ADDTIME(TIMESTAMP(Date, Hour), SEC_TO_TIME(Duration * 3600)) <= NOW()
-            AND IsApproved = TRUE AND PointsAwarded = FALSE AND UserID = %s
+            AND IsApproved = TRUE
+            AND PointsAwarded = FALSE
+            AND UserID = %s
+            AND ADDTIME(CONCAT(Date, ' ', Hour), SEC_TO_TIME(Duration * 3600)) <= NOW()
         """, (user_id,))
 
         reservations = cur.fetchall()
