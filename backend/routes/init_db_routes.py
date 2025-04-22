@@ -3,7 +3,7 @@ from backend.config import get_connection
 
 init_db_bp = Blueprint('init_db', __name__)
 
-@init_db_bp.route('/init-db', methods=['GET'])
+@init_db_bp.route('/init_db', methods=['GET'])
 def init_db():
     try:
         connection = get_connection()
