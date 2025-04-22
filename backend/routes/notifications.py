@@ -51,8 +51,8 @@ def notification_general_function():
             notify_student_booking_rejected(cur, booking)
         elif bt == "club" and not approved:
             notify_club_booking_rejected(cur, booking)
-        elif bt = "club_event" and approved:
-            notify_club_event_to_students
+        elif bt == "club_event" and approved:
+            notify_club_event(cur, booking)
         else:
             pass
 
@@ -70,6 +70,7 @@ def notification_general_function():
 
 
 def notify_student_booking(cur, booking):
+    
     title = f"Booking Confirmed: {booking['Building']} {booking['RoomNumber']}, {booking['Date']} at {booking['Hour']}"
     message = f"Your room booking for {booking['RoomNumber']} in {booking['Building']} on {booking['Date']} at {booking['Hour']} has been approved."
 
@@ -121,7 +122,6 @@ def notify_student_booking_rejected(cur, booking):
         INSERT INTO GETS_STUDENT (NotificationID, StudentID)
         VALUES (%s, %s)
     """, (notification_id, booking["UserID"]))
-
 
 def notify_club_booking_rejected(cur, booking):
     title = f"Booking Rejected: {booking['Building']} {booking['RoomNumber']}, {booking['Date']} at {booking['Hour']}"
@@ -183,50 +183,6 @@ def notify_club_event(cur, booking):
 
 
 
-
-
-
-
-
-
-
-# Update user notification preferences (POST and GET).
-@notifs_bp.route("/api/notifications/prefs", methods=["POST", "GET"])
-def update_prefs():
-    data = request.get_json(silent=True) or request.args
-
-    student_id = data.get("studentID")
-    club_id = data.get("clubID")
-
-    wants_club = str(data.get("wantsClub", "true")).lower() == "true"
-    wants_uni = str(data.get("wantsUniversity", "true")).lower() == "true"
-
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO NOTIFICATION_PREFS (StudentID, ClubID, WantsClubNotifications, WantsUniversityNotifications)
-            VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-              WantsClubNotifications = VALUES(WantsClubNotifications),
-              WantsUniversityNotifications = VALUES(WantsUniversityNotifications)
-        """, (student_id, club_id, int(wants_club), int(wants_uni)))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({
-            "message": "Preferences updated",
-            "preferences": {
-                "studentID": student_id,
-                "clubID": club_id,
-                "wantsClub": wants_club,
-                "wantsUniversity": wants_uni
-            }
-        }), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 # Get all notifications for a user (GET).
 @notifs_bp.route("/api/notifications/user", methods=["GET"])
 def get_all_user_notifications():
@@ -260,7 +216,7 @@ def get_all_student_notifications(cur, user_id):
         FROM NOTIFICATIONS N
         JOIN GETS_STUDENT GS ON N.NotificationID = GS.NotificationID
         WHERE GS.StudentID = %s
-        AND N.Type IN ('booking_approved', 'booking_cancelled')
+        AND N.Type IN ('booking_approved', 'booking_cancelled', 'club_event')
         ORDER BY N.NotificationID DESC
     """, (user_id,))
     return cur.fetchall()
@@ -272,7 +228,7 @@ def get_all_club_notifications(cur, user_id):
         FROM NOTIFICATIONS N
         JOIN GETS_CLUB GC ON N.NotificationID = GC.NotificationID
         WHERE GC.ClubID = %s
-        AND N.Type IN ('booking_approved', 'booking_cancelled')
+          AND N.Type IN ('booking_approved', 'booking_cancelled', 'club_event')
         ORDER BY N.NotificationID DESC
     """, (user_id,))
     return cur.fetchall()
