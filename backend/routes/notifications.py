@@ -179,128 +179,31 @@ def update_prefs():
         return jsonify({"error": str(e)}), 500
 
 
+# Get all notifications for a user (GET).
 @notifs_bp.route("/api/notifications/user", methods=["GET"])
 def get_all_user_notifications():
-    """
-    Returns notifications for a given user, filtered by:
-      • booking_approved & booking_cancelled always included
-      • club_event included only if:
-          – global WantsClubNotifications = TRUE
-          – AND per‑club WantsThisClubNotifications = TRUE
-      • university_event included only if:
-          – global WantsUniversityNotifications = TRUE
-          – AND per‑topic WantsNotification = TRUE
-    """
-    user_id = request.args.get("userID", type=int)
-    if not user_id:
-        return jsonify(success=False, message="Missing userID"), 400
+    try:
+        user_id = request.args.get("user_id", type=int)
+        user_type = request.args.get("user_type", type=str)
 
-    conn = get_connection()
-    cur = conn.cursor(dictionary=True)
+        if not user_id or user_type not in ("student", "club"):
+            return jsonify(success=False, message="Missing or invalid user_id or user_type"), 400
 
-    # 1) Load global prefs
-    cur.execute("""
-        SELECT WantsClubNotifications, WantsUniversityNotifications
-        FROM NOTIFICATION_PREFS
-        WHERE UserID = %s
-    """, (user_id,))
-    prefs = cur.fetchone() or {"WantsClubNotifications": True,
-                                "WantsUniversityNotifications": True}
-    want_clubs = bool(prefs["WantsClubNotifications"])
-    want_unis = bool(prefs["WantsUniversityNotifications"])
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
 
-    # 2) Load raw notifications (via GETS_STUDENT or GETS_CLUB)
-    #    We’ll treat everyone as a student here—adjust if clubs differ.
-    cur.execute("""
-        SELECT n.NotificationID, n.BookingID, n.Title, n.Message, n.Type
-        FROM NOTIFICATIONS n
-        JOIN GETS_STUDENT gs ON n.NotificationID = gs.NotificationID
-        WHERE gs.StudentID = %s
-        ORDER BY n.NotificationID DESC
-    """, (user_id,))
-    raw = cur.fetchall()
+        if user_type == "student":
+            notifications = get_all_student_notifications(cur, user_id)
+        else:
+            notifications = get_all_club_notifications(cur, user_id)
 
-    filtered = []
-    for n in raw:
-        t = n["Type"]
+        cur.close()
+        conn.close()
 
-        # — Always keep booking_approved & booking_cancelled —
-        if t in ("booking_approved", "booking_cancelled"):
-            filtered.append(n)
-            continue
+        return jsonify(success=True, notifications=notifications), 200
 
-        # — CLUB_EVENT logic —
-        if t == "club_event":
-            if not want_clubs:
-                # user has globally turned off club events
-                continue
-
-            # find this notification's ClubID via EVENT_DETAILS
-            cur.execute("""
-              SELECT ed.ClubID
-              FROM NOTIFICATIONS n2
-              JOIN EVENT_DETAILS ed ON n2.BookingID = ed.BookingID
-              WHERE n2.NotificationID = %s
-            """, (n["NotificationID"],))
-            row = cur.fetchone()
-            club_id = row["ClubID"] if row else None
-            if club_id is None:
-                continue
-
-            # check per‑club setting
-            cur.execute("""
-              SELECT WantsThisClubNotifications
-              FROM USER_CLUB_PREFS
-              WHERE UserID = %s AND ClubID = %s
-            """, (user_id, club_id))
-            club_pref = cur.fetchone()
-            if club_pref and not club_pref["WantsThisClubNotifications"]:
-                continue
-
-            filtered.append(n)
-            continue
-
-        # — UNIVERSITY_EVENT logic —
-        if t == "university_event":
-            if not want_unis:
-                # user has globally turned off university events
-                continue
-
-            # find all topics for this notification's BookingID
-            cur.execute("""
-              SELECT Topic
-              FROM EVENT_TOPICS
-              WHERE BookingID = (
-                SELECT BookingID FROM NOTIFICATIONS WHERE NotificationID = %s
-              )
-            """, (n["NotificationID"],))
-            topics = [r["Topic"] for r in cur.fetchall()]
-
-            # if ANY topic is still wanted, keep the notification
-            keep = False
-            for topic in topics:
-                cur.execute("""
-                  SELECT WantsNotification
-                  FROM USER_EVENT_TOPIC_PREFS
-                  WHERE UserID = %s AND Topic = %s
-                """, (user_id, topic))
-                ep = cur.fetchone()
-                if ep is None or ep["WantsNotification"]:
-                    keep = True
-                    break
-            if keep:
-                filtered.append(n)
-            continue
-
-        # — any other types (e.g. points_confirmation) —
-        #    you can choose to include or exclude; here we include them:
-        filtered.append(n)
-
-    # cleanup
-    cur.close()
-    conn.close()
-
-    return jsonify(success=True, notifications=filtered), 200
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
 
 
 def get_all_student_notifications(cur, user_id):
