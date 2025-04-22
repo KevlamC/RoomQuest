@@ -51,6 +51,8 @@ def notification_general_function():
             notify_student_booking_rejected(cur, booking)
         elif bt == "club" and not approved:
             notify_club_booking_rejected(cur, booking)
+        elif bt = "club_event" and approved:
+            notify_club_event_to_students
         else:
             pass
 
@@ -137,6 +139,52 @@ def notify_club_booking_rejected(cur, booking):
         INSERT INTO GETS_CLUB (NotificationID, ClubID)
         VALUES (%s, %s)
     """, (notification_id, booking["UserID"]))
+
+
+
+def notify_club_event(cur, booking):
+    """
+    Notifies all student members of the club that is hosting a newly approved club event,
+    filtered by their event topic preferences.
+    """
+    # Step 1: Get ClubID for the event
+    cur.execute("""
+        SELECT ClubID FROM EVENT_DETAILS
+        WHERE BookingID = %s AND EventType = 'club'
+    """, (booking["BookingID"],))
+    result = cur.fetchone()
+
+    if not result or not result["ClubID"]:
+        return  # No club found for this event — exit silently for now
+
+    club_id = result["ClubID"]
+
+    # Step 2: Insert notification into NOTIFICATIONS
+    title = f"New Club Event: {booking['Date']} at {booking['Hour']} in {booking['Building']} {booking['RoomNumber']}"
+    message = f"A new event hosted by your club is scheduled for {booking['Date']} at {booking['Hour']} in {booking['Building']} {booking['RoomNumber']}."
+
+    cur.execute("""
+        INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
+        VALUES (%s, %s, %s, 'club_event')
+    """, (booking["BookingID"], title, message))
+
+    cur.execute("SELECT LAST_INSERT_ID()")
+    notification_id = cur.fetchone()["LAST_INSERT_ID()"]
+
+    # Step 3: Notify only student members of the club who have opted into at least one of the event's topics
+    cur.execute("""
+        INSERT INTO GETS_STUDENT (NotificationID, StudentID)
+        SELECT DISTINCT %s AS NotificationID, prefs.UserID
+        FROM EVENT_TOPICS et
+        JOIN USER_EVENT_TOPIC_PREFS prefs ON et.Topic = prefs.Topic
+        JOIN IS_MEMBER m ON prefs.UserID = m.StudentID
+        WHERE et.BookingID = %s AND m.ClubID = %s
+    """, (notification_id, booking["BookingID"], club_id))
+
+
+
+
+
 
 
 
