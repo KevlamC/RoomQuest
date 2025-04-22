@@ -16,7 +16,6 @@ def seed_test_data():
             (3, "student3@example.com", "student3", "pass123", "student"),
             (4, "club1@example.com", "clubOne", "clubpass", "club"),
             (5, "club2@example.com", "clubTwo", "clubpass", "club"),
-            (987654321, "admin@university.edu", "admin1", "adminpass123", "admin")
         ]
         cursor.executemany(
             "INSERT INTO USER (ID, Email, Username, Password, userType) VALUES (%s, %s, %s, %s, %s)",
