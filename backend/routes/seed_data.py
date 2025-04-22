@@ -148,22 +148,22 @@ def seed_events_search(cursor):
         {
             "BookingID": 3,
             "ClubID": 4,
-            "EventName": "Chess Tournament",
+            "EventName": "Chess",
             "Description": "Compete in a thrilling chess battle!",
             "Link": "http://example.com/chess",
-            "EventType": "Tournament",
+            "EventType": "club",
             "IsPublic": True,
-            "Topics": ["games", "competition"]
+            "Topics": "Gaming"
         },
         {
             "BookingID": 4,
             "ClubID": 5,
-            "EventName": "Health Awareness Talk",
+            "EventName": "Healthy",
             "Description": "Learn about mental health from experts.",
             "Link": "http://example.com/healthtalk",
-            "EventType": "Seminar",
+            "EventType": "club",
             "IsPublic": True,
-            "Topics": ["wellness", "education"]
+            "Topics": "Hackathon"
         }
     ]
 
