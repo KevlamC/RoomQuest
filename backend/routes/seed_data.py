@@ -139,49 +139,36 @@ def seed_events_search(cursor):
     # Clean up previous test data
     cursor.execute("DELETE FROM EVENT_TOPICS")
     cursor.execute("DELETE FROM EVENT_DETAILS")
+    cursor.execute("DELETE FROM TIME_SLOT WHERE UserID IN (4, 5)")  # Make sure any old bookings from those users are gone
 
-    # Insert some dummy TIME_SLOT data for the BookingIDs that will be used in events
+    # Step 1: Insert approved and pending bookings for Club 4 and Club 5
     cursor.execute("""
-        INSERT INTO TIME_SLOT (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType)
-        VALUES (3, 4, '2025-04-25', '10:00:00', 2, 'A101', 'Library', 'club'),
-               (4, 5, '2025-04-26', '14:00:00', 1, 'B202', 'Medicine', 'club');
+        INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, IsApproved)
+        VALUES 
+        (4, '2025-04-25', '10:00:00', 2, 'A101', 'Library', 'club', TRUE),
+        (5, '2025-04-26', '14:00:00', 1, 'B202', 'Medicine', 'club', FALSE)
     """)
 
-    # Event Data
-    events = [
-        {
-            "BookingID": 3,
-            "ClubID": 4,
-            "EventName": "Chess",
-            "Description": "Compete in a thrilling chess battle!",
-            "Link": "http://example.com/chess",
-            "EventType": "club",
-            "IsPublic": True,
-            "Topic": "Gaming"
-        },
-        {
-            "BookingID": 4,
-            "ClubID": 5,
-            "EventName": "Healthy",
-            "Description": "Learn about mental health from experts.",
-            "Link": "http://example.com/healthtalk",
-            "EventType": "club",
-            "IsPublic": True,
-            "Topic": "Hackathon"
-        }
-    ]
+    # Step 2: Get the auto-generated BookingIDs
+    cursor.execute("SELECT BookingID FROM TIME_SLOT WHERE UserID = 4 AND RoomNumber = 'A101' AND Building = 'Library'")
+    booking_id1 = cursor.fetchone()['BookingID']
 
-    for event in events:
-        cursor.execute(
-            """INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
-               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-            (event["BookingID"], event["EventName"], event["Description"], event["IsPublic"],
-             event["Link"], event["EventType"], event["ClubID"])
-        )
-        for topic in event["Topic"]:
-            cursor.execute(
-                "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
-                (event["BookingID"], topic)
-            )
+    cursor.execute("SELECT BookingID FROM TIME_SLOT WHERE UserID = 5 AND RoomNumber = 'B202' AND Building = 'Medicine'")
+    booking_id2 = cursor.fetchone()['BookingID']
 
+    # Step 3: Insert into EVENT_DETAILS using retrieved BookingIDs
+    cursor.execute(
+        """INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+        (booking_id1, "Chess", "Compete in a thrilling chess battle!", "http://example.com/chess", "club", 4)
+    )
+    cursor.execute(
+        """INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+        (booking_id2, "Healthy", "Learn about mental health from experts.", "http://example.com/healthtalk", "club", 5)
+    )
+
+    # Step 4: Insert topics
+    cursor.execute("INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)", (booking_id1, "Gaming"))
+    cursor.execute("INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)", (booking_id2, "Hackathon"))
 
