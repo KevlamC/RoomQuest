@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from backend.config import get_connection
 from datetime import timedelta
+import datetime
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -127,6 +128,18 @@ def admin_add_booking():
         cursor.close()
         connection.close()
 
+
+def serialize_row(columns, row):
+    def serialize_value(value):
+        if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+            return value.isoformat()
+        elif isinstance(value, datetime.timedelta):
+            return str(value)
+        return value
+
+    return {col: serialize_value(val) for col, val in zip(columns, row)}
+
+
 # Delete a reservation/lecture/tutorial/lab (no ownership check needed).
 @admin_bp.route('/api/admin/delete-booking', methods=['POST', 'GET'])
 def admin_delete_booking():
@@ -155,7 +168,7 @@ def admin_delete_booking():
                 return jsonify({"message": f"No booking found with BookingID {booking_id}."}), 404
 
             columns = [desc[0] for desc in cursor.description]
-            deleted_info["deleted_booking"] = dict(zip(columns, booking_data))
+            deleted_info["deleted_booking"] = serialize_row(columns, booking_data)
 
             cursor.execute("DELETE FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
             connection.commit()
@@ -181,7 +194,7 @@ def admin_delete_booking():
                 return jsonify({"message": "No matching course(s) found."}), 404
 
             course_columns = [desc[0] for desc in cursor.description]
-            deleted_info["deleted_courses"] = [dict(zip(course_columns, row)) for row in course_rows]
+            deleted_info["deleted_courses"] = [serialize_row(course_columns, row) for row in course_rows]
             course_ids = [row[0] for row in course_rows]  # CourseID
 
             # Get related bookings
@@ -190,7 +203,7 @@ def admin_delete_booking():
             timeslot_rows = cursor.fetchall()
             if timeslot_rows:
                 timeslot_columns = [desc[0] for desc in cursor.description]
-                deleted_info["deleted_bookings"] = [dict(zip(timeslot_columns, row)) for row in timeslot_rows]
+                deleted_info["deleted_bookings"] = [serialize_row(timeslot_columns, row) for row in timeslot_rows]
 
             # Delete bookings
             cursor.execute(f"DELETE FROM TIME_SLOT WHERE CourseID IN ({format_ids})", course_ids)
