@@ -64,8 +64,7 @@ def seed_rooms_and_features(cursor):
         {"RoomNumber": "909",  "Building": "IT",          "Capacity": 28, "Features": ["computers", "projector"]},
         {"RoomNumber": "100A", "Building": "Commerce",    "Capacity": 32, "Features": ["whiteboard", "dual projectors", "computers"]},
     ]
-    cursor.execute("DELETE FROM FEATURES;")
-    cursor.execute("DELETE FROM ROOMS;")
+
     for room in rooms:
         cursor.execute(
             "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
@@ -86,7 +85,7 @@ def seed_timeslots(cursor):
         {"UserID": 5, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "606",  "Building": "Medicine",    "BookingType": "club",    "CourseID": None, "IsApproved": False},
         {"UserID": 3, "Date": "2025-04-21", "Hour": "20:00:00", "Duration": 3, "RoomNumber": "100A", "Building": "Commerce",    "BookingType": "student", "CourseID": None, "IsApproved": True},
     ]
-    cursor.execute("DELETE FROM TIME_SLOT;")
+    
     for ts in timeslots:
         cursor.execute(
             "INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
