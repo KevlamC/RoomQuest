@@ -83,7 +83,7 @@ def seed_timeslots(cursor):
         {"UserID": 2, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "202",  "Building": "Science",     "BookingType": "student", "CourseID": None, "IsApproved": False},
         {"UserID": 4, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "303",  "Building": "Library",     "BookingType": "club",    "CourseID": None, "IsApproved": True},
         {"UserID": 5, "Date": "2025-04-20", "Hour": "15:00:00", "Duration": 3, "RoomNumber": "606",  "Building": "Medicine",    "BookingType": "club",    "CourseID": None, "IsApproved": False},
-        {"UserID": 3, "Date": "2025-04-21", "Hour": "20:00:00", "Duration": 3, "RoomNumber": "100A", "Building": "Commerce",    "BookingType": "student", "CourseID": None, "IsApproved": True},
+        {"UserID": 3, "Date": "2025-04-21", "Hour": "20:00:00", "Duration": 1, "RoomNumber": "100A", "Building": "Commerce",    "BookingType": "student", "CourseID": None, "IsApproved": True},
     ]
     
     for ts in timeslots:
