@@ -15,9 +15,9 @@ def notification_general_function():
     """
     try:
         booking_id = request.values.get("BookingID", type=int)
-        ----------------------------
+        # ----------------------------
         approved   = str(request.values.get("approved", "")).lower() == "true"
-        ----------------------------
+        # ----------------------------
 
         if not booking_id:
             return jsonify(success=False, message="Missing BookingID"), 400
