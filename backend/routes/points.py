@@ -41,7 +41,7 @@ def get_student_points():
 
 @points_bp.route("/api/points/award-points/student", methods=["GET", "POST"])
 def award_student_points():
-    debug_log = []  # For collecting logs
+    debug_log = []
 
     try:
         debug_log.append("Route called: /api/points/award-points/student")
@@ -59,24 +59,42 @@ def award_student_points():
 
         conn = get_connection()
         debug_log.append("Database connection established.")
-
         cur = conn.cursor(dictionary=True)
         debug_log.append("Database cursor created.")
 
+        # Run a modified query that includes end time calculations and current time
+        debug_log.append("Executing diagnostic query to fetch evaluated time logic...")
+        cur.execute("""
+            SELECT 
+                BookingID, 
+                Hour, 
+                Duration, 
+                ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) AS EndTime,
+                CURTIME() AS NowTime
+            FROM TIME_SLOT
+            WHERE BookingType = 'student'
+              AND IsApproved = TRUE
+              AND PointsAwarded = FALSE
+              AND UserID = %s
+              AND Date = CURDATE()
+        """, (user_id,))
+        time_check = cur.fetchall()
+        debug_log.append(f"Time diagnostic results: {time_check}")
+
+        # Now run the real filtered query
         query = """
             SELECT * FROM TIME_SLOT 
             WHERE (BookingType = 'student')
-            AND IsApproved = TRUE
-            AND PointsAwarded = FALSE
-            AND UserID = %s
-            AND NOT (
-                Date > CURDATE()
-                OR
-                (
-                    Date = CURDATE() 
-                    AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) >= CURTIME()
-                )
-            )
+              AND IsApproved = TRUE
+              AND PointsAwarded = FALSE
+              AND UserID = %s
+              AND NOT (
+                  Date > CURDATE()
+                  OR (
+                      Date = CURDATE() 
+                      AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) >= CURTIME()
+                  )
+              )
         """
         debug_log.append("Executing query to fetch eligible reservations...")
         cur.execute(query, (user_id,))
