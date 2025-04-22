@@ -208,7 +208,7 @@ def get_all_user_notifications():
 
 def get_all_student_notifications(cur, user_id):
     cur.execute("""
-        SELECT N.NotificationID, N.BookingID, N.Title, N.Message, N.Type, N.Timestamp
+        SELECT N.NotificationID, N.BookingID, N.Title, N.Message, N.Type
         FROM NOTIFICATIONS N
         JOIN GETS_STUDENT GS ON N.NotificationID = GS.NotificationID
         WHERE GS.StudentID = %s
@@ -219,7 +219,7 @@ def get_all_student_notifications(cur, user_id):
 
 def get_all_club_notifications(cur, user_id):
     cur.execute("""
-        SELECT N.NotificationID, N.BookingID, N.Title, N.Message, N.Type, N.Timestamp
+        SELECT N.NotificationID, N.BookingID, N.Title, N.Message, N.Type
         FROM NOTIFICATIONS N
         JOIN GETS_CLUB GC ON N.NotificationID = GC.NotificationID
         WHERE GC.ClubID = %s
