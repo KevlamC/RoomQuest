@@ -3,6 +3,12 @@ from backend.config import get_connection
 
 event_search_bp = Blueprint('event_search', __name__)
 
+from flask import Blueprint, request, jsonify
+from backend.config import get_connection
+import datetime
+
+event_search_bp = Blueprint('event_search', __name__)
+
 @event_search_bp.route('/api/events/search', methods=['GET', 'POST'])
 def search_events():
     try:
@@ -60,12 +66,18 @@ def search_events():
             query += " AND " + " AND ".join(filters)
 
         cursor.execute(query, tuple(values))
-        results = cursor.fetchall()
+        rows = cursor.fetchall()
 
-        # Convert Duration if needed
-        for row in results:
-            if 'Duration' in row and hasattr(row['Duration'], 'total_seconds'):
-                row['Duration'] = int(row['Duration'].total_seconds() // 3600)
+        # Serialize to avoid JSON issues
+        def serialize_row(row):
+            for key, value in row.items():
+                if isinstance(value, datetime.timedelta):
+                    row[key] = int(value.total_seconds() // 3600)
+                elif isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+                    row[key] = str(value)
+            return row
+
+        results = [serialize_row(row) for row in rows]
 
         cursor.close()
         connection.close()
