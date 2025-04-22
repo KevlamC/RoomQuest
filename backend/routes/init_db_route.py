@@ -15,9 +15,9 @@ def init_db():
         cursor.execute("DROP TABLE IF EXISTS IS_MEMBER;")
         cursor.execute("DROP TABLE IF EXISTS NOTIFICATION_PREFS;")
         cursor.execute("DROP TABLE IF EXISTS NOTIFICATIONS;")
+        cursor.execute("DROP TABLE IF EXISTS EVENT_TOPICS;");
         cursor.execute("DROP TABLE IF EXISTS EVENT_DETAILS;")
         cursor.execute("DROP TABLE IF EXISTS POINTS_TRANSACTION;")
-        cursor.execute("DROP TABLE IF EXISTS EVENT_TOPICS;");
         cursor.execute("DROP TABLE IF EXISTS TIME_SLOT;")
         cursor.execute("DROP TABLE IF EXISTS FEATURES;")
         cursor.execute("DROP TABLE IF EXISTS COURSE;")
