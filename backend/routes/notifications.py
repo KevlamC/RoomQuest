@@ -4,6 +4,178 @@ from datetime import datetime
 
 notifs_bp = Blueprint("notifications", __name__)
 
+
+@points_bp.route("/api/notification/general-to-all", methods=["POST"])
+def notification_general_function():
+    """
+    General entrypoint for all booking‐approval notifications.
+    Expects (as JSON or form/query params):
+      - BookingID (int)
+      - approved  (true|false)
+    """
+    try:
+        booking_id = request.values.get("BookingID", type=int)
+        ----------------------------
+        approved   = str(request.values.get("approved", "")).lower() == "true"
+        ----------------------------
+
+        if not booking_id:
+            return jsonify(success=False, message="Missing BookingID"), 400
+
+        conn = get_connection()
+        cur  = conn.cursor(dictionary=True)
+
+        # 1) Load the booking to inspect its type, user, date, hour…
+        cur.execute("""
+            SELECT BookingID, UserID, Date, Hour, Duration, BookingType, IsApproved
+            FROM TIME_SLOT
+            WHERE BookingID = %s
+        """, (booking_id,))
+        booking = cur.fetchone()
+        if not booking:
+            cur.close(); conn.close()
+            return jsonify(success=False, message="Booking not found"), 404
+
+        # 2) Dispatch based on BookingType
+        bt = booking["BookingType"]
+        approval = booking["IsApproved"]
+        if bt == "student" and approved:
+            notify_student_booking(cur, booking)
+        elif bt == "club" and approved:
+            notify_club_booking(cur, booking)
+        # elif bt == "group" and approved:
+            # notify_group_booking(cur, booking)
+        elif bt == "student" and not approved:
+            notify_student_booking_rejected(cur, booking)
+        elif bt = "club" and not approved:
+            notify_club_booking_rejected(cur, booking)
+        elif bt = "club_event" and approved:
+            notify_club_event(cur, booking)
+        elif bt = "university_event" and approved:
+            notiy_university_event(cur, booking)
+        else:
+            # extend for 'admin', 'university_event', etc.
+            pass
+
+        # 3) Commit once after helper(s) insert NOTIFICATIONS & GETS_*
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify(
+            success=True,
+            message=f"Notification(s) created for {bt} booking #{booking_id}"
+        ), 200
+
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
+
+
+def notify_student_booking(cur, booking):
+    
+    # Prepare title and message
+    title = f"Booking Confirmed: {booking['Building']} {booking['RoomNumber']}, {booking['Date']} at {booking['Hour']}"
+    message = f"Your room booking for {booking['RoomNumber']} in {booking['Building']} on {booking['Date']} at {booking['Hour']} has been approved."
+    
+    # Insert into NOTIFICATIONS
+    cur.execute("""
+        INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
+        VALUES (%s, %s, %s, 'booking_approved')
+    """, (booking["BookingID"], title, message))
+
+    # Get the NotificationID of the inserted notification
+    cur.execute("SELECT LAST_INSERT_ID()")
+    notification_id = cur.fetchone()[0]
+
+    # Insert into GETS_STUDENT
+    cur.execute("""
+        INSERT INTO GETS_STUDENT (NotificationID, StudentID)
+        VALUES (%s, %s)
+    """, (notification_id, booking["UserID"]))
+
+
+
+def notify_club_booking(cur, booking):
+    
+    # Prepare title and message
+    title = f"Booking Confirmed: {booking['Building']} {booking['RoomNumber']}, {booking['Date']} at {booking['Hour']}"
+    message = f"Your room booking for {booking['RoomNumber']} in {booking['Building']} on {booking['Date']} at {booking['Hour']} has been approved."
+    
+    # Insert into NOTIFICATIONS
+    cur.execute("""
+        INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
+        VALUES (%s, %s, %s, 'booking_approved')
+    """, (booking["BookingID"], title, message))
+
+    # Get the NotificationID of the inserted notification
+    cur.execute("SELECT LAST_INSERT_ID()")
+    notification_id = cur.fetchone()[0]
+
+    # Insert into GETS_CLUB
+    cur.execute("""
+        INSERT INTO GETS_CLUB (NotificationID, StudentID)
+        VALUES (%s, %s)
+    """, (notification_id, booking["UserID"]))
+
+
+def notify_student_booking_rejected(cur, booking):
+    # Prepare title and message
+    title = f"Booking Rejected: {booking['Building']} {booking['RoomNumber']}, {booking['Date']} at {booking['Hour']}"
+    message = f"Your room booking for {booking['RoomNumber']} in {booking['Building']} on {booking['Date']} at {booking['Hour']} has been rejected."
+
+    # Insert into NOTIFICATIONS
+    cur.execute("""
+        INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
+        VALUES (%s, %s, %s, 'booking_rejected')
+    """, (booking["BookingID"], title, message))
+
+    # Get the NotificationID of the inserted notification
+    cur.execute("SELECT LAST_INSERT_ID()")
+    notification_id = cur.fetchone()[0]
+
+    # Insert into GETS_STUDENT
+    cur.execute("""
+        INSERT INTO GETS_STUDENT (NotificationID, StudentID)
+        VALUES (%s, %s)
+    """, (notification_id, booking["UserID"]))
+
+
+def notify_club_booking_rejected(cur, booking):
+    # Prepare title and message
+    title = f"Booking Rejected: {booking['Building']} {booking['RoomNumber']}, {booking['Date']} at {booking['Hour']}"
+    message = f"Your club's room booking for {booking['RoomNumber']} in {booking['Building']} on {booking['Date']} at {booking['Hour']} has been rejected."
+
+    # Insert into NOTIFICATIONS
+    cur.execute("""
+        INSERT INTO NOTIFICATIONS (BookingID, Title, Message, Type)
+        VALUES (%s, %s, %s, 'booking_rejected')
+    """, (booking["BookingID"], title, message))
+
+    # Get the NotificationID of the inserted notification
+    cur.execute("SELECT LAST_INSERT_ID()")
+    notification_id = cur.fetchone()[0]
+
+    # Insert into GETS_CLUB
+    cur.execute("""
+        INSERT INTO GETS_CLUB (NotificationID, StudentID)
+        VALUES (%s, %s)
+    """, (notification_id, booking["UserID"]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Insert a new notification.
 @notifs_bp.route("/api/notifications/new", methods=["POST", "GET"])
 def create_notification():
