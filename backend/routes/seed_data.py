@@ -13,6 +13,7 @@ def run_seeding():
         seed_rooms_and_features(cursor)
         seed_timeslots(cursor)
         seed_notifications_and_prefs(cursor)
+        seed_event_details_and_topics(cursor)
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
     except Exception as e:
@@ -133,3 +134,31 @@ def seed_notifications_and_prefs(cursor):
 
     # Assign club event to club 4
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
+
+
+def seed_event_details_and_topics(cursor):
+    # Assume BookingID 3 is a club event for ClubID 4
+    cursor.execute("""
+        INSERT INTO EVENT_DETAILS (BookingID, ClubID, EventType)
+        VALUES (3, 4, 'club')
+    """)
+
+    # Add topics to that club event
+    topics = ['Artificial Intelligence', 'Career Development']
+    for topic in topics:
+        cursor.execute("""
+            INSERT INTO EVENT_TOPICS (BookingID, Topic)
+            VALUES (3, %s)
+        """, (topic,))
+
+    # Student 1 likes both, Student 2 likes one, Student 3 likes none
+    topic_prefs = [
+        (1, 'Artificial Intelligence'),
+        (1, 'Career Development'),
+        (2, 'Artificial Intelligence'),
+    ]
+    for student_id, topic in topic_prefs:
+        cursor.execute("""
+            INSERT INTO USER_EVENT_TOPIC_PREFS (UserID, Topic)
+            VALUES (%s, %s)
+        """, (student_id, topic))
