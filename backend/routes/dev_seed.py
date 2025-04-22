@@ -36,6 +36,19 @@ def seed_test_data():
         ]
         cursor.executemany("INSERT INTO CLUB (ID, Points) VALUES (%s, %s)", clubs)
 
+        # Insert rooms (must exist before TIME_SLOT due to FK constraints)
+        rooms = [
+            ("101", "Engineering", 50),
+            ("201", "Science", 100),
+            ("303", "Health Center", 30),
+            ("100", "Business", 40),
+            ("200", "Community Hall", 200)
+        ]
+        cursor.executemany(
+            "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
+            rooms
+        )
+
         # Insert time slots
         timeslots = [
             (101, 4, "2025-05-01", "10:00:00", 4, "101", "Engineering", "club_event", None, True, True),
