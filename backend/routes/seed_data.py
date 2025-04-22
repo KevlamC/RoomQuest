@@ -13,6 +13,9 @@ def run_seeding():
         seed_rooms_and_features(cursor)
         seed_timeslots(cursor)
         seed_notifications_and_prefs(cursor)
+        seed_courses(cursor)
+        seed_topics(cursor)
+        seed_event_details_and_topics(cursor)
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
     except Exception as e:
@@ -133,3 +136,57 @@ def seed_notifications_and_prefs(cursor):
 
     # Assign club event to club 4
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
+
+def seed_courses(cursor):
+    courses = [
+        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lecture"},
+        {"CourseName": "CPSC 471", "SessionID": 2, "Type": "Tutorial"},
+        {"CourseName": "BIOL 231", "SessionID": 1, "Type": "Lab"},
+        {"CourseName": "ECON 201", "SessionID": 1, "Type": "Lecture"},
+    ]
+    for c in courses:
+        cursor.execute(
+            "INSERT INTO COURSE (CourseName, SessionID, Type) VALUES (%s, %s, %s)",
+            (c["CourseName"], c["SessionID"], c["Type"])
+        )
+
+
+def seed_topics(cursor):
+    topics = [
+        (1, "Artificial Intelligence"),
+        (2, "Career Development"),
+        (3, "Mental Health"),
+        (4, "Hackathon"),
+        (5, "Sustainability"),
+        (6, "Entrepreneurship"),
+        (7, "Cultural Festival"),
+        (8, "Research"),
+        (9, "Gaming"),
+        (10, "Community Service"),
+    ]
+    for topic_id, name in topics:
+        cursor.execute("INSERT IGNORE INTO TOPICS (TopicID, Topic) VALUES (%s, %s)", (topic_id, name))
+
+
+def seed_event_details_and_topics(cursor):
+    event_details = [
+        {"BookingID": 3, "EventName": "Library Jam Night", "Description": "An open mic night", "IsPublic": True, "Link": "http://club1.com", "EventType": "club", "ClubID": 4},
+        {"BookingID": 4, "EventName": "Health Talk", "Description": "Wellness session for students", "IsPublic": False, "Link": "http://club2.com/health", "EventType": "club", "ClubID": 5},
+    ]
+    topics_by_booking = {
+        3: [9, 7],  # Gaming, Cultural Festival
+        4: [3, 2],  # Mental Health, Career Development
+    }
+
+    for ev in event_details:
+        cursor.execute("""
+            INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (ev["BookingID"], ev["EventName"], ev["Description"], ev["IsPublic"], ev["Link"], ev["EventType"], ev["ClubID"]))
+
+    for booking_id, topic_ids in topics_by_booking.items():
+        for topic_id in topic_ids:
+            cursor.execute(
+                "INSERT INTO EVENT_TOPICS (BookingID, TopicID) VALUES (%s, %s)",
+                (booking_id, topic_id)
+            )
