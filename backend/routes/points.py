@@ -39,34 +39,69 @@ def get_student_points():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@points_bp.route("/api/points/award-points", methods=["GET", "POST"])
+@points_bp.route("/api/points/award-points/student", methods=["GET", "POST"])
 def award_student_points():
+    debug_log = []
+
     try:
+        debug_log.append("Route called: /api/points/award-points/student")
+
         user_id = request.args.get("UserID")
+        debug_log.append(f"Received UserID: {user_id}")
+
         if not user_id:
-            return jsonify({"success": False, "message": "Missing UserID parameter"}), 400
+            debug_log.append("Missing UserID parameter.")
+            return jsonify({
+                "success": False,
+                "message": "Missing UserID parameter",
+                "log": debug_log
+            }), 400
 
         conn = get_connection()
+        debug_log.append("Database connection established.")
         cur = conn.cursor(dictionary=True)
+        debug_log.append("Database cursor created.")
 
-        # Fetch eligible past reservations that haven't been awarded points yet
+        # Run a modified query that includes end time calculations and current time
+        debug_log.append("Executing diagnostic query to fetch evaluated time logic...")
         cur.execute("""
-            SELECT * FROM TIME_SLOT 
-            WHERE (BookingType = 'student' OR BookingType = 'club')
-            AND IsApproved = TRUE
-            AND PointsAwarded = FALSE
-            AND UserID = %s
-            AND NOT (
-                Date > CURDATE()
-                OR
-                (
-                    Date = CURDATE() 
-                    AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) >= CURTIME()
-                )
-            )
+            SELECT 
+                BookingID, 
+                Hour, 
+                Duration, 
+                ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) AS EndTime,
+                CURTIME() AS NowTime
+            FROM TIME_SLOT
+            WHERE BookingType = 'student'
+              AND IsApproved = TRUE
+              AND PointsAwarded = FALSE
+              AND UserID = %s
+              AND Date = CURDATE()
         """, (user_id,))
+        time_check = cur.fetchall()
+        debug_log.append(f"Time diagnostic results: {time_check}")
 
+        # Now run the real filtered query
+        query = """
+            SELECT * FROM TIME_SLOT 
+            WHERE (BookingType = 'student')
+              AND IsApproved = TRUE
+              AND PointsAwarded = FALSE
+              AND UserID = %s
+              AND NOT (
+                  Date > CURDATE()
+                  OR (
+                      Date = CURDATE() 
+                      AND ADDTIME(Hour, SEC_TO_TIME(Duration * 3600)) >= CURTIME()
+                  )
+              )
+        """
+        debug_log.append("Executing query to fetch eligible reservations...")
+        cur.execute(query, (user_id,))
         reservations = cur.fetchall()
+
+        debug_log.append(f"Reservations found: {len(reservations)}")
+        debug_log.append(f"Reservations detail: {reservations}")
 
         total_points = 0
         for res in reservations:
@@ -75,26 +110,34 @@ def award_student_points():
             earned_points = duration_hours * 20
             total_points += earned_points
 
-            # Update PointsAwarded to TRUE
+            debug_log.append(f"Awarding {earned_points} points for BookingID {booking_id}")
             cur.execute("UPDATE TIME_SLOT SET PointsAwarded = TRUE WHERE BookingID = %s", (booking_id,))
 
-        # Update student's points balance
         if total_points > 0:
+            debug_log.append(f"Updating STUDENT points: +{total_points} for UserID {user_id}")
             cur.execute("UPDATE STUDENT SET Points = Points + %s WHERE ID = %s", (total_points, user_id))
+        else:
+            debug_log.append("No points to award.")
 
         conn.commit()
         cur.close()
         conn.close()
+        debug_log.append("Database changes committed and connection closed.")
 
         return jsonify({
             "success": True,
             "awarded_points": total_points,
-            "message": f"Points awarded for {len(reservations)} past reservations."
+            "message": f"Points awarded for {len(reservations)} past reservations.",
+            "log": debug_log
         }), 200
 
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-
+        debug_log.append(f"Exception occurred: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": str(e),
+            "log": debug_log
+        }), 500
 
 # 🔹 Get club points
 @points_bp.route('/api/club/points', methods=['GET'])
