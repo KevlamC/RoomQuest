@@ -135,49 +135,49 @@ def seed_notifications_and_prefs(cursor):
     # Assign club event to club 4
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
 
-def seed_events_search(cursor):
-    # Clean up previous test data
-    cursor.execute("DELETE FROM EVENT_TOPICS")
-    cursor.execute("DELETE FROM EVENT_DETAILS")
+# def seed_events_search(cursor):
+    # # Clean up previous test data
+    # cursor.execute("DELETE FROM EVENT_TOPICS")
+    # cursor.execute("DELETE FROM EVENT_DETAILS")
 
-    # Map club user IDs to booking IDs (from TIME_SLOT)
-    # Club 4 (club1@example.com) has an approved booking in Library (BookingID 3)
-    # Club 5 (club2@example.com) has a pending booking in Medicine (BookingID 4)
+    # # Map club user IDs to booking IDs (from TIME_SLOT)
+    # # Club 4 (club1@example.com) has an approved booking in Library (BookingID 3)
+    # # Club 5 (club2@example.com) has a pending booking in Medicine (BookingID 4)
 
-    events = [
-        {
-            "BookingID": 3,
-            "ClubID": 4,
-            "EventName": "Chess",
-            "Description": "Compete in a thrilling chess battle!",
-            "Link": "http://example.com/chess",
-            "EventType": "club",
-            "IsPublic": True,
-            "Topics": "Gaming"
-        },
-        {
-            "BookingID": 4,
-            "ClubID": 5,
-            "EventName": "Healthy",
-            "Description": "Learn about mental health from experts.",
-            "Link": "http://example.com/healthtalk",
-            "EventType": "club",
-            "IsPublic": True,
-            "Topics": "Hackathon"
-        }
-    ]
+    # events = [
+    #     {
+    #         "BookingID": 3,
+    #         "ClubID": 4,
+    #         "EventName": "Chess",
+    #         "Description": "Compete in a thrilling chess battle!",
+    #         "Link": "http://example.com/chess",
+    #         "EventType": "club",
+    #         "IsPublic": True,
+    #         "Topics": "Gaming"
+    #     },
+    #     {
+    #         "BookingID": 4,
+    #         "ClubID": 5,
+    #         "EventName": "Healthy",
+    #         "Description": "Learn about mental health from experts.",
+    #         "Link": "http://example.com/healthtalk",
+    #         "EventType": "club",
+    #         "IsPublic": True,
+    #         "Topics": "Hackathon"
+    #     }
+    # ]
 
-    for event in events:
-        cursor.execute(
-            """INSERT INTO EVENT_DETAILS (BookingID, ClubID, EventName, Description, Link, EventType, IsPublic)
-               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-            (event["BookingID"], event["ClubID"], event["EventName"], event["Description"],
-             event["Link"], event["EventType"], event["IsPublic"])
-        )
-        for topic in event["Topics"]:
-            cursor.execute(
-                "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
-                (event["BookingID"], topic)
-            )
+    # for event in events:
+    #     cursor.execute(
+    #         """INSERT INTO EVENT_DETAILS (BookingID, ClubID, EventName, Description, Link, EventType, IsPublic)
+    #            VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+    #         (event["BookingID"], event["ClubID"], event["EventName"], event["Description"],
+    #          event["Link"], event["EventType"], event["IsPublic"])
+    #     )
+    #     for topic in event["Topics"]:
+    #         cursor.execute(
+    #             "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
+    #             (event["BookingID"], topic)
+    #         )
 
 
