@@ -116,9 +116,11 @@ def admin_delete_booking():
         session_id = request.args.get('session_id')  # Optional
         course_type = request.args.get('course_type')  # Optional: Lecture, Lab, Tutorial
 
-        # Verify admin
-        cursor.execute("SELECT * FROM ADMIN WHERE ID = %s", (user_id,))
-        if cursor.fetchone() is None:
+        # Verify admin by checking the userType in USER table
+        cursor.execute("SELECT userType FROM USER WHERE ID = %s", (user_id,))
+        result = cursor.fetchone()
+        
+        if result is None or result[0] != 'admin':
             return jsonify({"message": "Unauthorized. Only admins can delete bookings."}), 403
 
         if booking_id:
@@ -165,7 +167,3 @@ def admin_delete_booking():
     finally:
         cursor.close()
         connection.close()
-
-@admin_bp.route("/admin/test")
-def test_admin():
-    return "Admin route works!"
