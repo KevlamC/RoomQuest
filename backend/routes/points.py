@@ -121,31 +121,31 @@ def get_club_points():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@points_bp.route("/api/points/leaderboard", methods=["GET", "POST"])
-def rank_students_by_points():
-    try:
-        conn = get_connection()
-        cur = conn.cursor(dictionary=True)
+# @points_bp.route("/api/points/leaderboard", methods=["GET", "POST"])
+# def rank_students_by_points():
+#     try:
+#         conn = get_connection()
+#         cur = conn.cursor(dictionary=True)
 
-        # Join USER and STUDENT tables for names + points
-        cur.execute("""
-            SELECT u.ID, u.Username, s.Points
-            FROM STUDENT s
-            JOIN USER u ON s.ID = u.ID
-            ORDER BY s.Points DESC
-        """)
-        rankings = cur.fetchall()
+#         # Join USER and STUDENT tables for names + points
+#         cur.execute("""
+#             SELECT u.ID, u.Username, s.Points
+#             FROM STUDENT s
+#             JOIN USER u ON s.ID = u.ID
+#             ORDER BY s.Points DESC
+#         """)
+#         rankings = cur.fetchall()
 
-        cur.close()
-        conn.close()
+#         cur.close()
+#         conn.close()
 
-        return jsonify({
-            "success": True,
-            "rankings": rankings
-        }), 200
+#         return jsonify({
+#             "success": True,
+#             "rankings": rankings
+#         }), 200
 
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
+#     except Exception as e:
+#         return jsonify({
+#             "success": False,
+#             "message": str(e)
+#         }), 500
