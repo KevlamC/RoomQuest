@@ -85,6 +85,7 @@ def seed_rooms_and_features(cursor):
 
 
 def seed_timeslots(cursor):
+    cursor.execute("DELETE FROM TIME_SLOT")
     timeslots = [
         {"UserID": 1, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3,
          "RoomNumber": "101", "Building": "Engineering", "BookingType": "student",   "CourseID": None, "IsApproved": True},
@@ -262,10 +263,10 @@ def seed_course_search(cursor):
 
     # Insert course entries (CourseName + SessionID = composite for uniqueness)
     courses = [
-        {"CourseID": 1, "CourseName": "CPSC 471", "SessionID": "1", "Type": "Lecture"},
-        {"CourseID": 2, "CourseName": "CPSC 471", "SessionID": "1", "Type": "Tutorial"},
-        {"CourseID": 3, "CourseName": "CPSC 471", "SessionID": "1", "Type": "Lab"},
-        {"CourseID": 4, "CourseName": "PHIL 279", "SessionID": "1", "Type": "Lecture"}
+        {"CourseID": 1, "CourseName": "CPSC 471", "SessionID": 1, "Type": "Lecture"},
+        {"CourseID": 2, "CourseName": "CPSC 471", "SessionID": 1, "Type": "Tutorial"},
+        {"CourseID": 3, "CourseName": "CPSC 471", "SessionID": 1, "Type": "Lab"},
+        {"CourseID": 4, "CourseName": "PHIL 279", "SessionID": 1, "Type": "Lecture"}
     ]
     cursor.executemany(
         "INSERT INTO COURSE (CourseID, CourseName, SessionID, Type) VALUES (%s, %s, %s, %s)",
