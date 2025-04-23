@@ -135,14 +135,14 @@ def seed_timeslots(cursor):
          "RoomNumber": "150", "Building": "Business", "BookingType": "club_event", "CourseID": None, "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-05-05", "Hour": "09:00:00", "Duration": 2,
          "RoomNumber": "230", "Building": "Community Hall", "BookingType": "university_event", "CourseID": None, "PointsAwarded": True, "IsApproved": True},
-        {"UserID": 987654321, "Date": "2025-06-01", "Hour": "09:00:00", "Duration": 2,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 1, "PointsAwarded": True, "IsApproved": True},
-        {"UserID": 987654321, "Date": "2025-06-02", "Hour": "10:00:00", "Duration": 1,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 2, "PointsAwarded": True, "IsApproved": True},
-        {"UserID": 987654321, "Date": "2025-06-03", "Hour": "11:00:00", "Duration": 2,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 3, "PointsAwarded": True, "IsApproved": True},
-        {"UserID": 987654321, "Date": "2025-06-04", "Hour": "13:00:00", "Duration": 1,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 4, "PointsAwarded": True, "IsApproved": True},
+        # {"UserID": 987654321, "Date": "2025-06-01", "Hour": "09:00:00", "Duration": 2,
+        #  "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 1, "PointsAwarded": True, "IsApproved": True},
+        # {"UserID": 987654321, "Date": "2025-06-02", "Hour": "10:00:00", "Duration": 1,
+        #  "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 2, "PointsAwarded": True, "IsApproved": True},
+        # {"UserID": 987654321, "Date": "2025-06-03", "Hour": "11:00:00", "Duration": 2,
+        #  "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 3, "PointsAwarded": True, "IsApproved": True},
+        # {"UserID": 987654321, "Date": "2025-06-04", "Hour": "13:00:00", "Duration": 1,
+        #  "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 4, "PointsAwarded": True, "IsApproved": True},
     ]
     for ts in timeslots:
         cursor.execute(
