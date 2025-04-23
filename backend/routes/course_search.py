@@ -4,14 +4,22 @@ import datetime
 
 course_bp = Blueprint('course', __name__)
 
+def serialize_value(val, col=None):
+    if isinstance(val, (datetime.date, datetime.datetime)):
+        return val.isoformat()
+    elif isinstance(val, datetime.time):
+        return val.strftime("%H:%M:%S")
+    elif isinstance(val, datetime.timedelta):
+        return int(val.total_seconds() // 60)
+    elif isinstance(val, int) and col == "Hour":
+        # Convert minutes-since-midnight to HH:MM:SS
+        hours = val // 60
+        minutes = val % 60
+        return f"{hours:02}:{minutes:02}:00"
+    return val
+
 def serialize_row(columns, row):
-    def serialize_value(val):
-        if isinstance(val, (datetime.date, datetime.time, datetime.datetime)):
-            return val.isoformat()
-        elif isinstance(val, datetime.timedelta):
-            return int(val.total_seconds() // 60)  # Convert to minutes
-        return val
-    return {col: serialize_value(val) for col, val in zip(columns, row)}
+    return {col: serialize_value(val, col) for col, val in zip(columns, row)}
 
 @course_bp.route('/api/student/search-course', methods=['GET', 'POST'])
 def search_course():
