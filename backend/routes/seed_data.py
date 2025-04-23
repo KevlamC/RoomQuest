@@ -285,12 +285,12 @@ def seed_course_search(cursor):
     cursor.execute("DELETE FROM COURSE;")
 
     courses = [
-        {"CourseID": 1, "CourseName": "CPSC 471", "SessionID": 1, "Type": "Lecture"},
-        {"CourseID": 2, "CourseName": "CPSC 471", "SessionID": 1, "Type": "Tutorial"},
-        {"CourseID": 3, "CourseName": "CPSC 471", "SessionID": 1, "Type": "Lab"},
-        {"CourseID": 4, "CourseName": "PHIL 279", "SessionID": 1, "Type": "Lecture"}
+        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lecture"},
+        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Tutorial"},
+        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lab"},
+        {"CourseName": "PHIL 279", "SessionID": 1, "Type": "Lecture"}
     ]
     cursor.executemany(
-        "INSERT INTO COURSE (CourseID, CourseName, SessionID, Type) VALUES (%s, %s, %s, %s)",
-        courses
+        "INSERT INTO COURSE (CourseName, SessionID, Type) VALUES (%s, %s, %s)",
+        (courses["CourseName"], courses["SessionID"], courses["Type"])
     )
