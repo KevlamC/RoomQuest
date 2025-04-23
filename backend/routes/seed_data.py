@@ -256,7 +256,6 @@ def seed_event_search(cursor):
 
 def seed_course_search(cursor):
     # Clean COURSE and related course-linked TIME_SLOTs
-    cursor.execute("DELETE FROM TIME_SLOT WHERE CourseID IS NOT NULL;")
     cursor.execute("DELETE FROM COURSE;")
 
     # Insert course entries (CourseName + SessionID = composite for uniqueness)
