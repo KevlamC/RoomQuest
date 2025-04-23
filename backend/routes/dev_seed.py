@@ -176,3 +176,51 @@ def seed_test_data():
     finally:
         cursor.close()
         connection.close()
+
+
+@dev_bp.route('/myseed2', methods=['GET'])
+def seed_course_search():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Clean COURSE and related course-linked TIME_SLOTs
+        cursor.execute("DELETE FROM TIME_SLOT WHERE CourseID IS NOT NULL;")
+        cursor.execute("DELETE FROM COURSE;")
+
+        # Insert course entries (CourseName + SessionID = composite for uniqueness)
+        courses = [
+            (1, "CPSC 471", "1", "Lecture"),
+            (2, "CPSC 471", "1", "Tutorial"),
+            (3, "CPSC 471", "1", "Lab"),
+            (4, "PHIL 279", "1", "Lecture")
+        ]
+        cursor.executemany(
+            "INSERT INTO COURSE (CourseID, CourseName, SessionID, Type) VALUES (%s, %s, %s, %s)",
+            courses
+        )
+
+        # Insert TIME_SLOTs linked to courses
+        slots = [
+            (201, 987654321, "2025-06-01", "09:00:00", 2, "101", "Engineering", "university_event", 1, True, True),
+            (202, 987654321, "2025-06-02", "10:00:00", 1, "101", "Engineering", "university_event", 2, True, True),
+            (203, 987654321, "2025-06-03", "11:00:00", 2, "101", "Engineering", "university_event", 3, True, True),
+            (204, 987654321, "2025-06-04", "13:00:00", 1, "101", "Engineering", "university_event", 4, True, True),
+        ]
+        cursor.executemany(
+            """INSERT INTO TIME_SLOT
+               (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved, PointsAwarded)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            slots
+        )
+
+        connection.commit()
+        return jsonify({"message": "Course search data seeded successfully!"})
+
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"message": "Error seeding course data", "error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        connection.close()
