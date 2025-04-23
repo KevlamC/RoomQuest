@@ -11,10 +11,10 @@ def run_seeding():
     try:
         seed_users(cursor)
         seed_rooms_and_features(cursor)
-        seed_timeslots(cursor)
+        seed_course_search(cursor)  # Move this before seed_timeslots
+        seed_timeslots(cursor)      # Now it can reference existing courses
         seed_notifications_and_prefs(cursor)
         seed_event_details_and_topics(cursor)
-        seed_course_search(cursor)
         seed_event_search(cursor)
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
