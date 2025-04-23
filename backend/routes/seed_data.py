@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify
-from datetime import date, timedelta
 from backend.config import get_connection
 
 seed_bp = Blueprint('seed', __name__)
@@ -13,7 +12,6 @@ def run_seeding():
         seed_rooms_and_features(cursor)
         seed_timeslots(cursor)
         seed_notifications_and_prefs(cursor)
-        seed_event_details_and_topics(cursor)
         seed_course_search(cursor)
         seed_event_search(cursor)
         conn.commit()
@@ -170,125 +168,72 @@ def seed_notifications_and_prefs(cursor):
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
 
 
-def seed_event_details_and_topics(cursor):
-    # Club 1’s event (BookingID 3)
-    cursor.execute("""
-        INSERT INTO EVENT_DETAILS (BookingID,ClubID,EventType,EventName)
-        VALUES (3,4,'club','AI & Career Fair')
-    """)
-    for topic in ["Artificial Intelligence","Career Development"]:
-        cursor.execute("INSERT INTO EVENT_TOPICS (BookingID,Topic) VALUES (3,%s)", (topic,))
-
-    # Club 2’s event (BookingID 4)
-    cursor.execute("""
-        INSERT INTO EVENT_DETAILS (BookingID,ClubID,EventType,EventName)
-        VALUES (4,5,'club','Business Networking Night')
-    """)
-    for topic in ["Career Development","Entrepreneurship"]:
-        cursor.execute("INSERT INTO EVENT_TOPICS (BookingID,Topic) VALUES (4,%s)", (topic,))
-
 def seed_event_search(cursor):
-    # First ensure clubs exist (using INSERT IGNORE to avoid duplicates)
-    clubs = [
-        {"ID": 4, "Points": 100},
-        {"ID": 5, "Points": 100}
-    ]
-    cursor.executemany("INSERT IGNORE INTO CLUB (ID, Points) VALUES (%s, %s)", clubs)
+        # Clean up old data
+        cursor.execute("DELETE FROM CLUB;")
+        cursor.execute("DELETE FROM EVENT_DETAILS;")
+        cursor.execute("DELETE FROM EVENT_TOPICS;")
 
-    # Mapping of valid event BookingIDs from your timeslots data
-    # Format: {BookingID: {"UserID": x, "BookingType": "club_event/university_event"}}
-    valid_event_bookings = {
-        # From your timeslots data where BookingType is club_event/university_event
-        3: {"UserID": 4, "BookingType": "club_event"},
-        4: {"UserID": 5, "BookingType": "club_event"},
-        10: {"UserID": 5, "BookingType": "club_event"},
-        11: {"UserID": 5, "BookingType": "club_event"},
-        12: {"UserID": 5, "BookingType": "club_event"},
-        13: {"UserID": 5, "BookingType": "club_event"},
-        14: {"UserID": 5, "BookingType": "club_event"},
-        15: {"UserID": 987654321, "BookingType": "university_event"},
-        18: {"UserID": 987654321, "BookingType": "university_event"},
-        20: {"UserID": 4, "BookingType": "club_event"},
-        21: {"UserID": 987654321, "BookingType": "university_event"},
-        22: {"UserID": 5, "BookingType": "club_event"},
-        23: {"UserID": 4, "BookingType": "club_event"},
-        25: {"UserID": 987654321, "BookingType": "university_event"},
-        26: {"UserID": 987654321, "BookingType": "university_event"},
-        27: {"UserID": 987654321, "BookingType": "university_event"},
-        28: {"UserID": 987654321, "BookingType": "university_event"}
-    }
+        # Insert clubs
+        clubs = [
+            {"ID": 4, "Points": 100},
+            {"ID": 5, "Points": 100}
+        ]
+        cursor.executemany("INSERT INTO CLUB (ID, Points) VALUES (%s, %s)", clubs)
 
-    # Your complete event data (unchanged)
-    events = [
-        # Club Events
-        {"BookingID": 3, "EventName": "AI & Career Fair", "Description": "Tech and career opportunities", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 4},
-        {"BookingID": 4, "EventName": "Business Networking Night", "Description": "Connect with professionals", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
-        {"BookingID": 10, "EventName": "Tech Showcase", "Description": "Cool club inventions", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
-        {"BookingID": 11, "EventName": "Robotics Demo", "Description": "Robot competition", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
-        {"BookingID": 12, "EventName": "Gaming Night", "Description": "Board and video games", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
-        {"BookingID": 13, "EventName": "Art Expo", "Description": "Art from our members", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
-        {"BookingID": 14, "EventName": "Dance Workshop", "Description": "Club-led dance class", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
-        {"BookingID": 20, "EventName": "Hackathon", "Description": "Annual student hackathon", "IsPublic": True, "Link": "https://hackathon.com", "EventType": "club", "ClubID": 4},
-        {"BookingID": 22, "EventName": "Startup Pitch", "Description": "Entrepreneurship night", "IsPublic": True, "Link": "https://startup.com", "EventType": "club", "ClubID": 5},
-        {"BookingID": 23, "EventName": "Exam Prep", "Description": "Final exam help session", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 4},
-        
-        # University Events
-        {"BookingID": 15, "EventName": "AI Conference", "Description": "Talks on AI", "IsPublic": True, "Link": "https://ai.com", "EventType": "university", "ClubID": None},
-        {"BookingID": 18, "EventName": "Mental Wellness", "Description": "De-stress tips", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
-        {"BookingID": 21, "EventName": "Career Fair", "Description": "Meet industry reps", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
-        {"BookingID": 25, "EventName": "Green Day", "Description": "Sustainability event", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
-        {"BookingID": 26, "EventName": "Student Meetup", "Description": "Make new friends", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
-        {"BookingID": 27, "EventName": "Open House", "Description": "Campus-wide event", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
-        {"BookingID": 28, "EventName": "Workshop: Study Skills", "Description": "Tips for academic success", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None}
-    ]
+        # Insert base event details
+        events = [
+            {"BookingID": 3, "EventName": "Club Event A", "Description": "Description for Club Event A", "IsPublic": True, "Link": "https://example.com/club-a", "EventType": "club", "ClubID": 4},
+            {"BookingID": 4, "EventName": "Club Event B", "Description": "Description for Club Event B", "IsPublic": True, "Link": "https://example.com/club-b", "EventType": "club", "ClubID": 5},
+            {"BookingID": 10, "EventName": "Club Event C", "Description": "Description for Club Event C", "IsPublic": True, "Link": "https://example.com/club-c", "EventType": "club", "ClubID": 5},
+            {"BookingID": 11, "EventName": "Club Event D", "Description": "Description for Club Event D", "IsPublic": True, "Link": "https://example.com/club-d", "EventType": "club", "ClubID": 5},
+            {"BookingID": 12, "EventName": "Club Event E", "Description": "Description for Club Event E", "IsPublic": True, "Link": "https://example.com/club-e", "EventType": "club", "ClubID": 5},
+            {"BookingID": 13, "EventName": "Club Event F", "Description": "Description for Club Event F", "IsPublic": True, "Link": "https://example.com/club-f", "EventType": "club", "ClubID": 5},
+            {"BookingID": 14, "EventName": "Club Event G", "Description": "Description for Club Event G", "IsPublic": True, "Link": "https://example.com/club-g", "EventType": "club", "ClubID": 5},
+            {"BookingID": 20, "EventName": "Club Event H", "Description": "Description for Club Event H", "IsPublic": True, "Link": "https://example.com/club-h", "EventType": "club", "ClubID": 4},
+            {"BookingID": 22, "EventName": "Club Event I", "Description": "Description for Club Event I", "IsPublic": True, "Link": "https://example.com/club-i", "EventType": "club", "ClubID": 5},
+            {"BookingID": 23, "EventName": "Club Event J", "Description": "Description for Club Event J", "IsPublic": True, "Link": "https://example.com/club-j", "EventType": "club", "ClubID": 4},
 
-    # Insert events that have valid bookings
-    for event in events:
-        if event["BookingID"] in valid_event_bookings:
-            booking_info = valid_event_bookings[event["BookingID"]]
-            cursor.execute(
-                """INSERT INTO EVENT_DETAILS 
-                (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                (event["BookingID"], 
-                 event["EventName"], 
-                 event["Description"],
-                 event["IsPublic"],
-                 event["Link"],
-                 event["EventType"],
-                 booking_info["UserID"] if event["EventType"] == "club" else None)
-            )
+            {"BookingID": 15, "EventName": "University Event 1", "Description": "Description for University Event 1", "IsPublic": True, "Link": "https://example.com/uni-1", "EventType": "university", "ClubID": None},
+            {"BookingID": 18, "EventName": "University Event 2", "Description": "Description for University Event 2", "IsPublic": True, "Link": "https://example.com/uni-2", "EventType": "university", "ClubID": None},
+            {"BookingID": 21, "EventName": "University Event 3", "Description": "Description for University Event 3", "IsPublic": True, "Link": "https://example.com/uni-3", "EventType": "university", "ClubID": None},
+            {"BookingID": 25, "EventName": "University Event 4", "Description": "Description for University Event 4", "IsPublic": True, "Link": "https://example.com/uni-4", "EventType": "university", "ClubID": None},
+            {"BookingID": 26, "EventName": "University Event 5", "Description": "Description for University Event 5", "IsPublic": True, "Link": "https://example.com/uni-5", "EventType": "university", "ClubID": None},
+            {"BookingID": 27, "EventName": "University Event 6", "Description": "Description for University Event 6", "IsPublic": True, "Link": "https://example.com/uni-6", "EventType": "university", "ClubID": None},
+            {"BookingID": 28, "EventName": "University Event 7", "Description": "Description for University Event 7", "IsPublic": True, "Link": "https://example.com/uni-7", "EventType": "university", "ClubID": None},
+        ]
 
-    # Your complete topic data (unchanged)
-    topics = [
-        {"BookingID": 3, "Topic": "Artificial Intelligence"},
-        {"BookingID": 3, "Topic": "Career Development"},
-        {"BookingID": 4, "Topic": "Entrepreneurship"},
-        {"BookingID": 4, "Topic": "Networking"},
-        {"BookingID": 10, "Topic": "Technology"},
-        {"BookingID": 11, "Topic": "Robotics"},
-        {"BookingID": 12, "Topic": "Gaming"},
-        {"BookingID": 13, "Topic": "Art"},
-        {"BookingID": 14, "Topic": "Dance"},
-        {"BookingID": 20, "Topic": "Hackathon"},
-        {"BookingID": 22, "Topic": "Entrepreneurship"},
-        {"BookingID": 23, "Topic": "Study Help"},
-        {"BookingID": 15, "Topic": "Artificial Intelligence"},
-        {"BookingID": 18, "Topic": "Mental Health"},
-        {"BookingID": 21, "Topic": "Career Development"},
-        {"BookingID": 25, "Topic": "Sustainability"},
-        {"BookingID": 26, "Topic": "Community"},
-        {"BookingID": 27, "Topic": "Campus Life"},
-        {"BookingID": 28, "Topic": "Study Skills"}
-    ]
+        cursor.executemany(
+            """INSERT INTO EVENT_DETAILS 
+            (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            events
+        )
 
-    # Insert topics for events that exist
-    for topic in topics:
-        if topic["BookingID"] in valid_event_bookings:
-            cursor.execute(
-                "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
-                (topic["BookingID"], topic["Topic"])
-            )
+        # Insert base event topics
+        topics = [
+            {"BookingID": 3, "Topic": "Hackathon"},
+            {"BookingID": 4, "Topic": "Artificial Intelligence"},
+            {"BookingID": 10, "Topic": "Mental Health"},
+            {"BookingID": 11, "Topic": "Entrepreneurship"},
+            {"BookingID": 12, "Topic": "Sustainability"},
+            {"BookingID": 13, "Topic": "Career Development"},
+            {"BookingID": 14, "Topic": "Resumes"},
+            {"BookingID": 20, "Topic": "Study Help"},
+            {"BookingID": 22, "Topic": "Community"},
+            {"BookingID": 23, "Topic": "Board Games"},
+            {"BookingID": 15, "Topic": "Technology"},
+            {"BookingID": 18, "Topic": "Robotics"},
+            {"BookingID": 21, "Topic": "Gaming"},
+            {"BookingID": 25, "Topic": "Art"},
+            {"BookingID": 26, "Topic": "Dance"},
+            {"BookingID": 27, "Topic": "Campus Life"},
+            {"BookingID": 28, "Topic": "Study Skills"},
+        ]
+        cursor.executemany(
+            "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
+            topics
+        )
 
 def seed_course_search(cursor):
     # Clean COURSE and related course-linked TIME_SLOTs
