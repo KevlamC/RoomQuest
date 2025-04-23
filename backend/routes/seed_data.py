@@ -290,7 +290,11 @@ def seed_course_search(cursor):
         {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lab"},
         {"CourseName": "PHIL 279", "SessionID": 1, "Type": "Lecture"}
     ]
+    
+    # Convert the list of dictionaries to a list of tuples in the correct order
+    course_data = [(course["CourseName"], course["SessionID"], course["Type"]) for course in courses]
+    
     cursor.executemany(
         "INSERT INTO COURSE (CourseName, SessionID, Type) VALUES (%s, %s, %s)",
-        (courses["CourseName"], courses["SessionID"], courses["Type"])
+        course_data
     )
