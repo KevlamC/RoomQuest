@@ -122,21 +122,21 @@ def seed_test_data():
 
         # Matching event details
         extra_events = [
-            (106, "Career Fair", "Meet industry reps", True, "", "student", None),
-            (107, "Resume Workshop", "Improve your resume", True, "", "student", None),
-            (108, "Exam Prep", "Final exam help session", True, "", "student", None),
-            (109, "Student Meetup", "Make new friends", True, "", "student", None),
-            (110, "Chess Tournament", "Chess battles!", True, "", "student", None),
+            (106, "Career Fair", "Meet industry reps", True, "", "university", None),
+            (107, "Resume Workshop", "Improve your resume", True, "", "university", None),
+            (108, "Exam Prep", "Final exam help session", True, "", "club", 5),
+            (109, "Student Meetup", "Make new friends", True, "", "university", None),
+            (110, "Chess Tournament", "Chess battles!", True, "", "university", None),
             (111, "Tech Showcase", "Cool club inventions", True, "", "club", 5),
             (112, "Robotics Demo", "Robot competition", True, "", "club", 5),
             (113, "Gaming Night", "Board and video games", True, "", "club", 5),
             (114, "Art Expo", "Art from our members", True, "", "club", 5),
             (115, "Dance Workshop", "Club-led dance class", True, "", "club", 5),
             (116, "Open House", "Campus-wide event", True, "", "university", None),
-            (117, "Workshop: Study Skills", "Tips for academic success", True, "", "student", None),
-            (118, "Mental Wellness", "De-stress tips", True, "", "student", None),
+            (117, "Workshop: Study Skills", "Tips for academic success", True, "", "university", None),
+            (118, "Mental Wellness", "De-stress tips", True, "", "university", None),
             (119, "Alumni Talk", "Hear from grads", True, "", "university", None),
-            (120, "Coding Bootcamp", "Learn to code fast", True, "", "student", None)
+            (120, "Coding Bootcamp", "Learn to code fast", True, "", "university", None)
         ]
         cursor.executemany("""
             INSERT INTO EVENT_DETAILS 
