@@ -14,6 +14,8 @@ def run_seeding():
         seed_timeslots(cursor)
         seed_notifications_and_prefs(cursor)
         seed_event_details_and_topics(cursor)
+        seed_course_search(cursor)
+        seed_event_search(cursor)
         conn.commit()
         return jsonify({"message": "Database seeded successfully ✅"}), 200
     except Exception as e:
@@ -156,7 +158,7 @@ def seed_event_details_and_topics(cursor):
     # Add student 3’s preference for Entrepreneurship
     cursor.execute("INSERT INTO USER_EVENT_TOPIC_PREFS (UserID,Topic) VALUES (3,'Entrepreneurship')")
 
-def seed_test_data(cursor):
+def seed_event_search(cursor):
         # Clean up old data
         cursor.execute("DELETE FROM USER;")
         cursor.execute("DELETE FROM TIME_SLOT;")
