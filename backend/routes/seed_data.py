@@ -146,7 +146,7 @@ def seed_timeslots(cursor):
     ]
     for ts in timeslots:
         cursor.execute(
-            "INSERT INTO TIME_SLOT (UserID,Date,Hour,Duration,RoomNumber,Building,BookingType,CourseID,IsApproved)"
+            "INSERT INTO TIME_SLOT (UserID,Date,Hour,Duration,RoomNumber,Building,BookingType,CourseID,PointsAwarded,IsApproved)"
             " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
             (ts["UserID"], ts["Date"], ts["Hour"], ts["Duration"],
              ts["RoomNumber"], ts["Building"], ts["BookingType"],
