@@ -8,6 +8,8 @@ def serialize_row(columns, row):
     def serialize_value(val):
         if isinstance(val, (datetime.date, datetime.time, datetime.datetime)):
             return val.isoformat()
+        elif isinstance(val, datetime.timedelta):
+            return int(val.total_seconds() // 60)  # Convert to minutes
         return val
     return {col: serialize_value(val) for col, val in zip(columns, row)}
 
