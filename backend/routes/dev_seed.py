@@ -51,7 +51,7 @@ def seed_test_data():
             rooms
         )
 
-        # Insert time slots
+        # Insert base time slots
         timeslots = [
             (101, 4, "2025-05-01", "10:00:00", 4, "101", "Engineering", "club_event", None, True, True),
             (102, 987654321, "2025-05-02", "13:00:00", 2, "201", "Science", "university_event", None, True, True),
@@ -66,7 +66,7 @@ def seed_test_data():
             timeslots
         )
 
-        # Insert event details
+        # Insert base event details
         events = [
             (101, "Hackathon", "Annual student hackathon", True, "https://hackathon.com", "club", 4),
             (102, "AI Conference", "Talks on AI", True, "https://ai.com", "university", None),
@@ -81,7 +81,7 @@ def seed_test_data():
             events
         )
 
-        # Insert event topics
+        # Insert base event topics
         topics = [
             (101, "Hackathon"),
             (102, "Artificial Intelligence"),
@@ -92,6 +92,79 @@ def seed_test_data():
         cursor.executemany(
             "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
             topics
+        )
+
+        # EXTRA 15 BOOKINGS
+
+        # 15 new time slots
+        extra_timeslots = [
+            (106, 1, "2025-05-06", "10:00:00", 2, "101", "Engineering", "student", None, False, True),
+            (107, 1, "2025-05-07", "11:00:00", 1, "201", "Science", "student", None, True, True),
+            (108, 1, "2025-05-08", "09:00:00", 2, "303", "Health Center", "student", None, True, True),
+            (109, 1, "2025-05-09", "12:00:00", 1, "100", "Business", "student", None, False, False),
+            (110, 1, "2025-05-10", "13:00:00", 2, "200", "Community Hall", "student", None, True, True),
+            (111, 5, "2025-05-11", "14:00:00", 2, "101", "Engineering", "club_event", None, False, True),
+            (112, 5, "2025-05-12", "15:00:00", 2, "201", "Science", "club_event", None, True, True),
+            (113, 5, "2025-05-13", "10:00:00", 1, "303", "Health Center", "club_event", None, True, True),
+            (114, 5, "2025-05-14", "11:00:00", 1, "100", "Business", "club_event", None, False, False),
+            (115, 5, "2025-05-15", "09:00:00", 2, "200", "Community Hall", "club_event", None, True, True),
+            (116, 987654321, "2025-05-16", "10:00:00", 2, "101", "Engineering", "university_event", None, False, False),
+            (117, 2, "2025-05-17", "13:00:00", 2, "201", "Science", "student", None, False, True),
+            (118, 3, "2025-05-18", "09:00:00", 2, "303", "Health Center", "student", None, False, True),
+            (119, 987654321, "2025-05-19", "12:00:00", 1, "100", "Business", "university_event", None, False, True),
+            (120, 2, "2025-05-20", "13:00:00", 2, "200", "Community Hall", "student", None, False, True)
+        ]
+        cursor.executemany("""
+            INSERT INTO TIME_SLOT 
+            (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, PointsAwarded, IsApproved)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, extra_timeslots)
+
+        # Matching event details
+        extra_events = [
+            (106, "Career Fair", "Meet industry reps", True, "", "student", None),
+            (107, "Resume Workshop", "Improve your resume", True, "", "student", None),
+            (108, "Exam Prep", "Final exam help session", True, "", "student", None),
+            (109, "Student Meetup", "Make new friends", True, "", "student", None),
+            (110, "Chess Tournament", "Chess battles!", True, "", "student", None),
+            (111, "Tech Showcase", "Cool club inventions", True, "", "club", 5),
+            (112, "Robotics Demo", "Robot competition", True, "", "club", 5),
+            (113, "Gaming Night", "Board and video games", True, "", "club", 5),
+            (114, "Art Expo", "Art from our members", True, "", "club", 5),
+            (115, "Dance Workshop", "Club-led dance class", True, "", "club", 5),
+            (116, "Open House", "Campus-wide event", True, "", "university", None),
+            (117, "Workshop: Study Skills", "Tips for academic success", True, "", "student", None),
+            (118, "Mental Wellness", "De-stress tips", True, "", "student", None),
+            (119, "Alumni Talk", "Hear from grads", True, "", "university", None),
+            (120, "Coding Bootcamp", "Learn to code fast", True, "", "student", None)
+        ]
+        cursor.executemany("""
+            INSERT INTO EVENT_DETAILS 
+            (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, extra_events)
+
+        # Matching event topics
+        extra_topics = [
+            (106, "Career Development"),
+            (107, "Resumes"),
+            (108, "Study Help"),
+            (109, "Community"),
+            (110, "Board Games"),
+            (111, "Technology"),
+            (112, "Robotics"),
+            (113, "Gaming"),
+            (114, "Art"),
+            (115, "Dance"),
+            (116, "Campus Life"),
+            (117, "Study Skills"),
+            (118, "Mental Health"),
+            (119, "Alumni"),
+            (120, "Programming")
+        ]
+        cursor.executemany(
+            "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
+            extra_topics
         )
 
         connection.commit()
