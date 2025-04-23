@@ -168,72 +168,72 @@ def seed_notifications_and_prefs(cursor):
     cursor.execute("INSERT INTO GETS_CLUB (NotificationID, ClubID) VALUES (2, 4)")
 
 
-def seed_event_search(cursor):
-        # Clean up old data
-        cursor.execute("DELETE FROM CLUB;")
-        cursor.execute("DELETE FROM EVENT_DETAILS;")
-        cursor.execute("DELETE FROM EVENT_TOPICS;")
+# def seed_event_search(cursor):
+#         # Clean up old data
+#         cursor.execute("DELETE FROM CLUB;")
+#         cursor.execute("DELETE FROM EVENT_DETAILS;")
+#         cursor.execute("DELETE FROM EVENT_TOPICS;")
 
-        # Insert clubs
-        clubs = [
-            {"ID": 4, "Points": 100},
-            {"ID": 5, "Points": 100}
-        ]
-        cursor.executemany("INSERT INTO CLUB (ID, Points) VALUES (%s, %s)", clubs)
+#         # Insert clubs
+#         clubs = [
+#             {"ID": 4, "Points": 100},
+#             {"ID": 5, "Points": 100}
+#         ]
+#         cursor.executemany("INSERT INTO CLUB (ID, Points) VALUES (%s, %s)", clubs)
 
-        # Insert base event details
-        events = [
-            {"BookingID": 3, "EventName": "Club Event A", "Description": "Description for Club Event A", "IsPublic": True, "Link": "https://example.com/club-a", "EventType": "club", "ClubID": 4},
-            {"BookingID": 4, "EventName": "Club Event B", "Description": "Description for Club Event B", "IsPublic": True, "Link": "https://example.com/club-b", "EventType": "club", "ClubID": 5},
-            {"BookingID": 10, "EventName": "Club Event C", "Description": "Description for Club Event C", "IsPublic": True, "Link": "https://example.com/club-c", "EventType": "club", "ClubID": 5},
-            {"BookingID": 11, "EventName": "Club Event D", "Description": "Description for Club Event D", "IsPublic": True, "Link": "https://example.com/club-d", "EventType": "club", "ClubID": 5},
-            {"BookingID": 12, "EventName": "Club Event E", "Description": "Description for Club Event E", "IsPublic": True, "Link": "https://example.com/club-e", "EventType": "club", "ClubID": 5},
-            {"BookingID": 13, "EventName": "Club Event F", "Description": "Description for Club Event F", "IsPublic": True, "Link": "https://example.com/club-f", "EventType": "club", "ClubID": 5},
-            {"BookingID": 14, "EventName": "Club Event G", "Description": "Description for Club Event G", "IsPublic": True, "Link": "https://example.com/club-g", "EventType": "club", "ClubID": 5},
-            {"BookingID": 20, "EventName": "Club Event H", "Description": "Description for Club Event H", "IsPublic": True, "Link": "https://example.com/club-h", "EventType": "club", "ClubID": 4},
-            {"BookingID": 22, "EventName": "Club Event I", "Description": "Description for Club Event I", "IsPublic": True, "Link": "https://example.com/club-i", "EventType": "club", "ClubID": 5},
-            {"BookingID": 23, "EventName": "Club Event J", "Description": "Description for Club Event J", "IsPublic": True, "Link": "https://example.com/club-j", "EventType": "club", "ClubID": 4},
+#         # Insert base event details
+#         events = [
+#             {"BookingID": 3, "EventName": "Club Event A", "Description": "Description for Club Event A", "IsPublic": True, "Link": "https://example.com/club-a", "EventType": "club", "ClubID": 4},
+#             {"BookingID": 4, "EventName": "Club Event B", "Description": "Description for Club Event B", "IsPublic": True, "Link": "https://example.com/club-b", "EventType": "club", "ClubID": 5},
+#             {"BookingID": 10, "EventName": "Club Event C", "Description": "Description for Club Event C", "IsPublic": True, "Link": "https://example.com/club-c", "EventType": "club", "ClubID": 5},
+#             {"BookingID": 11, "EventName": "Club Event D", "Description": "Description for Club Event D", "IsPublic": True, "Link": "https://example.com/club-d", "EventType": "club", "ClubID": 5},
+#             {"BookingID": 12, "EventName": "Club Event E", "Description": "Description for Club Event E", "IsPublic": True, "Link": "https://example.com/club-e", "EventType": "club", "ClubID": 5},
+#             {"BookingID": 13, "EventName": "Club Event F", "Description": "Description for Club Event F", "IsPublic": True, "Link": "https://example.com/club-f", "EventType": "club", "ClubID": 5},
+#             {"BookingID": 14, "EventName": "Club Event G", "Description": "Description for Club Event G", "IsPublic": True, "Link": "https://example.com/club-g", "EventType": "club", "ClubID": 5},
+#             {"BookingID": 20, "EventName": "Club Event H", "Description": "Description for Club Event H", "IsPublic": True, "Link": "https://example.com/club-h", "EventType": "club", "ClubID": 4},
+#             {"BookingID": 22, "EventName": "Club Event I", "Description": "Description for Club Event I", "IsPublic": True, "Link": "https://example.com/club-i", "EventType": "club", "ClubID": 5},
+#             {"BookingID": 23, "EventName": "Club Event J", "Description": "Description for Club Event J", "IsPublic": True, "Link": "https://example.com/club-j", "EventType": "club", "ClubID": 4},
 
-            {"BookingID": 15, "EventName": "University Event 1", "Description": "Description for University Event 1", "IsPublic": True, "Link": "https://example.com/uni-1", "EventType": "university", "ClubID": None},
-            {"BookingID": 18, "EventName": "University Event 2", "Description": "Description for University Event 2", "IsPublic": True, "Link": "https://example.com/uni-2", "EventType": "university", "ClubID": None},
-            {"BookingID": 21, "EventName": "University Event 3", "Description": "Description for University Event 3", "IsPublic": True, "Link": "https://example.com/uni-3", "EventType": "university", "ClubID": None},
-            {"BookingID": 25, "EventName": "University Event 4", "Description": "Description for University Event 4", "IsPublic": True, "Link": "https://example.com/uni-4", "EventType": "university", "ClubID": None},
-            {"BookingID": 26, "EventName": "University Event 5", "Description": "Description for University Event 5", "IsPublic": True, "Link": "https://example.com/uni-5", "EventType": "university", "ClubID": None},
-            {"BookingID": 27, "EventName": "University Event 6", "Description": "Description for University Event 6", "IsPublic": True, "Link": "https://example.com/uni-6", "EventType": "university", "ClubID": None},
-            {"BookingID": 28, "EventName": "University Event 7", "Description": "Description for University Event 7", "IsPublic": True, "Link": "https://example.com/uni-7", "EventType": "university", "ClubID": None},
-        ]
+#             {"BookingID": 15, "EventName": "University Event 1", "Description": "Description for University Event 1", "IsPublic": True, "Link": "https://example.com/uni-1", "EventType": "university", "ClubID": None},
+#             {"BookingID": 18, "EventName": "University Event 2", "Description": "Description for University Event 2", "IsPublic": True, "Link": "https://example.com/uni-2", "EventType": "university", "ClubID": None},
+#             {"BookingID": 21, "EventName": "University Event 3", "Description": "Description for University Event 3", "IsPublic": True, "Link": "https://example.com/uni-3", "EventType": "university", "ClubID": None},
+#             {"BookingID": 25, "EventName": "University Event 4", "Description": "Description for University Event 4", "IsPublic": True, "Link": "https://example.com/uni-4", "EventType": "university", "ClubID": None},
+#             {"BookingID": 26, "EventName": "University Event 5", "Description": "Description for University Event 5", "IsPublic": True, "Link": "https://example.com/uni-5", "EventType": "university", "ClubID": None},
+#             {"BookingID": 27, "EventName": "University Event 6", "Description": "Description for University Event 6", "IsPublic": True, "Link": "https://example.com/uni-6", "EventType": "university", "ClubID": None},
+#             {"BookingID": 28, "EventName": "University Event 7", "Description": "Description for University Event 7", "IsPublic": True, "Link": "https://example.com/uni-7", "EventType": "university", "ClubID": None},
+#         ]
 
-        cursor.executemany(
-            """INSERT INTO EVENT_DETAILS 
-            (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-            events
-        )
+#         cursor.executemany(
+#             """INSERT INTO EVENT_DETAILS 
+#             (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+#             VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+#             events
+#         )
 
-        # Insert base event topics
-        topics = [
-            {"BookingID": 3, "Topic": "Hackathon"},
-            {"BookingID": 4, "Topic": "Artificial Intelligence"},
-            {"BookingID": 10, "Topic": "Mental Health"},
-            {"BookingID": 11, "Topic": "Entrepreneurship"},
-            {"BookingID": 12, "Topic": "Sustainability"},
-            {"BookingID": 13, "Topic": "Career Development"},
-            {"BookingID": 14, "Topic": "Resumes"},
-            {"BookingID": 20, "Topic": "Study Help"},
-            {"BookingID": 22, "Topic": "Community"},
-            {"BookingID": 23, "Topic": "Board Games"},
-            {"BookingID": 15, "Topic": "Technology"},
-            {"BookingID": 18, "Topic": "Robotics"},
-            {"BookingID": 21, "Topic": "Gaming"},
-            {"BookingID": 25, "Topic": "Art"},
-            {"BookingID": 26, "Topic": "Dance"},
-            {"BookingID": 27, "Topic": "Campus Life"},
-            {"BookingID": 28, "Topic": "Study Skills"},
-        ]
-        cursor.executemany(
-            "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
-            topics
-        )
+#         # Insert base event topics
+#         topics = [
+#             {"BookingID": 3, "Topic": "Hackathon"},
+#             {"BookingID": 4, "Topic": "Artificial Intelligence"},
+#             {"BookingID": 10, "Topic": "Mental Health"},
+#             {"BookingID": 11, "Topic": "Entrepreneurship"},
+#             {"BookingID": 12, "Topic": "Sustainability"},
+#             {"BookingID": 13, "Topic": "Career Development"},
+#             {"BookingID": 14, "Topic": "Resumes"},
+#             {"BookingID": 20, "Topic": "Study Help"},
+#             {"BookingID": 22, "Topic": "Community"},
+#             {"BookingID": 23, "Topic": "Board Games"},
+#             {"BookingID": 15, "Topic": "Technology"},
+#             {"BookingID": 18, "Topic": "Robotics"},
+#             {"BookingID": 21, "Topic": "Gaming"},
+#             {"BookingID": 25, "Topic": "Art"},
+#             {"BookingID": 26, "Topic": "Dance"},
+#             {"BookingID": 27, "Topic": "Campus Life"},
+#             {"BookingID": 28, "Topic": "Study Skills"},
+#         ]
+#         cursor.executemany(
+#             "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
+#             topics
+#         )
 
 def seed_course_search(cursor):
     # Clean COURSE and related course-linked TIME_SLOTs
