@@ -160,8 +160,6 @@ def seed_event_details_and_topics(cursor):
 
 def seed_event_search(cursor):
         # Clean up old data
-        cursor.execute("DELETE FROM USER;")
-        cursor.execute("DELETE FROM TIME_SLOT;")
         cursor.execute("DELETE FROM CLUB;")
         cursor.execute("DELETE FROM EVENT_DETAILS;")
         cursor.execute("DELETE FROM EVENT_TOPICS;")
@@ -201,7 +199,7 @@ def seed_event_search(cursor):
         )
 
         # Insert base time slots for events.
-        timeslots = [
+        timeslots2 = [
             (501, 4, "2025-05-01", "10:00:00", 4, "151", "Engineering", "club_event", None, True, True),
             (502, 987654321, "2025-05-02", "13:00:00", 2, "251", "Science", "university_event", None, True, True),
             (503, 5, "2025-05-03", "14:00:00", 3, "353", "Health Center", "club_event", None, True, True),
@@ -212,7 +210,7 @@ def seed_event_search(cursor):
             """INSERT INTO TIME_SLOT 
             (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved, PointsAwarded)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-            timeslots
+            timeslots2
         )
 
         # Insert base event details
@@ -316,33 +314,32 @@ def seed_event_search(cursor):
 
 
 def seed_course_search(cursor):
+    # Clean COURSE and related course-linked TIME_SLOTs
+    cursor.execute("DELETE FROM TIME_SLOT WHERE CourseID IS NOT NULL;")
+    cursor.execute("DELETE FROM COURSE;")
 
-        # Clean COURSE and related course-linked TIME_SLOTs
-        cursor.execute("DELETE FROM TIME_SLOT WHERE CourseID IS NOT NULL;")
-        cursor.execute("DELETE FROM COURSE;")
+    # Insert course entries (CourseName + SessionID = composite for uniqueness)
+    courses = [
+        (1, "CPSC 471", "1", "Lecture"),
+        (2, "CPSC 471", "1", "Tutorial"),
+        (3, "CPSC 471", "1", "Lab"),
+        (4, "PHIL 279", "1", "Lecture")
+    ]
+    cursor.executemany(
+        "INSERT INTO COURSE (CourseID, CourseName, SessionID, Type) VALUES (%s, %s, %s, %s)",
+        courses
+    )
 
-        # Insert course entries (CourseName + SessionID = composite for uniqueness)
-        courses = [
-            (1, "CPSC 471", "1", "Lecture"),
-            (2, "CPSC 471", "1", "Tutorial"),
-            (3, "CPSC 471", "1", "Lab"),
-            (4, "PHIL 279", "1", "Lecture")
-        ]
-        cursor.executemany(
-            "INSERT INTO COURSE (CourseID, CourseName, SessionID, Type) VALUES (%s, %s, %s, %s)",
-            courses
-        )
-
-        # Insert TIME_SLOTs linked to courses
-        slots = [
-            (201, 987654321, "2025-06-01", "09:00:00", 2, "101", "Engineering", "university_event", 1, True, True),
-            (202, 987654321, "2025-06-02", "10:00:00", 1, "101", "Engineering", "university_event", 2, True, True),
-            (203, 987654321, "2025-06-03", "11:00:00", 2, "101", "Engineering", "university_event", 3, True, True),
-            (204, 987654321, "2025-06-04", "13:00:00", 1, "101", "Engineering", "university_event", 4, True, True),
-        ]
-        cursor.executemany(
-            """INSERT INTO TIME_SLOT
-               (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved, PointsAwarded)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-            slots
+    # Insert TIME_SLOTs linked to courses
+    slots = [
+        (201, 987654321, "2025-06-01", "09:00:00", 2, "101", "Engineering", "university_event", 1, True, True),
+        (202, 987654321, "2025-06-02", "10:00:00", 1, "101", "Engineering", "university_event", 2, True, True),
+        (203, 987654321, "2025-06-03", "11:00:00", 2, "101", "Engineering", "university_event", 3, True, True),
+        (204, 987654321, "2025-06-04", "13:00:00", 1, "101", "Engineering", "university_event", 4, True, True),
+    ]
+    cursor.executemany(
+        """INSERT INTO TIME_SLOT
+            (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved, PointsAwarded)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+        slots
         )
