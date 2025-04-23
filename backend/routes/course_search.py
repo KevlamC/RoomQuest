@@ -11,23 +11,20 @@ def serialize_row(columns, row):
     }
 
 def serialize_value(col, val):
-    # Force Hour formatting
+    # Handle 'Hour' as minutes since midnight → convert to HH:MM:SS
     if col.lower() == "hour":
-        try:
-            val_int = int(val)
-            hours = val_int // 60
-            minutes = val_int % 60
+        if isinstance(val, int):
+            hours = val // 60
+            minutes = val % 60
             return f"{hours:02}:{minutes:02}:00"
-        except:
-            return str(val)  # fallback to raw
 
-    # Date/time handling
-    if isinstance(val, (datetime.date, datetime.datetime)):
+    # Convert date/time/datetime to ISO format
+    if isinstance(val, datetime.date):
         return val.isoformat()
-    elif isinstance(val, datetime.time):
+    if isinstance(val, datetime.time):
         return val.strftime("%H:%M:%S")
-    elif isinstance(val, datetime.timedelta):
-        return int(val.total_seconds() // 60)
+    if isinstance(val, datetime.timedelta):
+        return str(val)
 
     return val
 
