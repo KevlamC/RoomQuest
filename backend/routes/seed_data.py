@@ -38,7 +38,6 @@ def seed_users(cursor):
         {"ID": 6000, "Email": "host@example.com", "Username": "host", "Password": "pass123", "userType": "student"},
         {"ID": 457, "Email": "wics@example.com", "Username": "wics", "Password": "clubpass", "userType": "club"},
         {"ID": 413, "Email": "data@example.com", "Username": "data", "Password": "clubpass", "userType": "club"},
-        {"ID": 987654321, "Email": "admin@example.com", "Username": "admin1", "Password": "adminpass", "userType": "admin"},
     ]
     
     for u in users:
