@@ -43,10 +43,10 @@ def seed_users(cursor):
     ]
     
     for u in users:
-    cursor.execute(
-        "INSERT INTO USER (ID,Email,Username,Password,userType) VALUES (%s,%s,%s,%s,%s)",
-        (u["ID"], u["Email"], u["Username"], u["Password"], u["userType"])
-    )
+        cursor.execute(
+            "INSERT INTO USER (ID,Email,Username,Password,userType) VALUES (%s,%s,%s,%s,%s)",
+            (u["ID"], u["Email"], u["Username"], u["Password"], u["userType"])
+        )
     student_rows = [(u["ID"], 0) for u in users if u["userType"] == "student"]
     club_rows = [(u["ID"], 0) for u in users if u["userType"] == "club"]
     
@@ -76,10 +76,10 @@ def seed_rooms_and_features(cursor):
     ]
 
     for room in rooms:
-    cursor.execute(
-        "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
-        (room["RoomNumber"], room["Building"], room["Capacity"])
-    )
+        cursor.execute(
+            "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
+            (room["RoomNumber"], room["Building"], room["Capacity"])
+        )
     feature_rows = [
         (room["RoomNumber"], room["Building"], feat)
         for room in rooms
