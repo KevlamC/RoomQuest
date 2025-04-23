@@ -51,8 +51,6 @@ def notification_general_function():
             notify_student_booking_rejected(cur, booking)
         elif bt == "club" and not approved:
             notify_club_booking_rejected(cur, booking)
-        elif bt == "club_event" and approved:
-            notify_club_event(cur, booking)
         else:
             pass
 
@@ -187,6 +185,8 @@ def notify_club_event(cur, booking):
 @notifs_bp.route("/api/notifications/user", methods=["GET"])
 def get_all_user_notifications():
     try:
+        cur.execute("DELETE * FROM NOTIFICATIONS WHERE BookingID IS NULL")
+
         user_id = request.args.get("user_id", type=int)
         user_type = request.args.get("user_type", type=str)
 
