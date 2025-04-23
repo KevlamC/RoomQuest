@@ -11,8 +11,8 @@ def run_seeding():
     try:
         seed_users(cursor)
         seed_rooms_and_features(cursor)
-        seed_course_search(cursor)  # Move this before seed_timeslots
-        seed_timeslots(cursor)      # Now it can reference existing courses
+        course_ids = seed_course_search(cursor)
+        seed_timeslots(cursor, course_ids)      # Now it can reference existing courses
         seed_notifications_and_prefs(cursor)
         seed_event_details_and_topics(cursor)
         seed_event_search(cursor)
@@ -84,7 +84,7 @@ def seed_rooms_and_features(cursor):
             )
 
 
-def seed_timeslots(cursor):
+def seed_timeslots(cursor, course_ids):
     cursor.execute("DELETE FROM TIME_SLOT")
     timeslots = [
         {"UserID": 1, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3,
@@ -136,21 +136,22 @@ def seed_timeslots(cursor):
         {"UserID": 987654321, "Date": "2025-05-05", "Hour": "09:00:00", "Duration": 2,
          "RoomNumber": "230", "Building": "Community Hall", "BookingType": "university_event", "CourseID": None, "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-01", "Hour": "09:00:00", "Duration": 2,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 1, "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[0], "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-02", "Hour": "10:00:00", "Duration": 1,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 2, "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[1], "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-03", "Hour": "11:00:00", "Duration": 2,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 3, "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[2], "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-04", "Hour": "13:00:00", "Duration": 1,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 4, "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[3], "PointsAwarded": True, "IsApproved": True},
     ]
     for ts in timeslots:
         cursor.execute(
-            "INSERT INTO TIME_SLOT (UserID,Date,Hour,Duration,RoomNumber,Building,BookingType,CourseID,PointsAwarded,IsApproved)"
-            " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+            """INSERT INTO TIME_SLOT 
+            (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, PointsAwarded, IsApproved)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (ts["UserID"], ts["Date"], ts["Hour"], ts["Duration"],
              ts["RoomNumber"], ts["Building"], ts["BookingType"],
-             ts["CourseID"],ts["PointsAwarded"], ts["IsApproved"])
+             ts["CourseID"], ts["PointsAwarded"], ts["IsApproved"])
         )
 
 
@@ -215,7 +216,6 @@ def seed_event_details_and_topics(cursor):
 
 def seed_event_search(cursor):
         # Clean up old data
-        cursor.execute("DELETE FROM CLUB;")
         cursor.execute("DELETE FROM EVENT_DETAILS;")
         cursor.execute("DELETE FROM EVENT_TOPICS;")
 
@@ -282,19 +282,25 @@ def seed_event_search(cursor):
 
 def seed_course_search(cursor):
     # Clean COURSE and related course-linked TIME_SLOTs
-    cursor.execute("DELETE FROM COURSE;")
+    cursor.execute("DELETE FROM TIME_SLOT WHERE CourseID IS NOT NULL")
+    cursor.execute("DELETE FROM COURSE")
+    cursor.execute("ALTER TABLE COURSE AUTO_INCREMENT = 1")  # Reset auto-increment
 
     courses = [
         {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lecture"},
-        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Tutorial"},
+        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Tutorial"}, 
         {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lab"},
         {"CourseName": "PHIL 279", "SessionID": 1, "Type": "Lecture"}
     ]
     
-    # Convert the list of dictionaries to a list of tuples in the correct order
-    course_data = [(course["CourseName"], course["SessionID"], course["Type"]) for course in courses]
+    # Insert courses one by one to ensure predictable IDs
+    for course in courses:
+        cursor.execute(
+            "INSERT INTO COURSE (CourseName, SessionID, Type) VALUES (%s, %s, %s)",
+            (course["CourseName"], course["SessionID"], course["Type"])
+        )
     
-    cursor.executemany(
-        "INSERT INTO COURSE (CourseName, SessionID, Type) VALUES (%s, %s, %s)",
-        course_data
-    )
+    # Now get the generated IDs to use in timeslots
+    cursor.execute("SELECT CourseID FROM COURSE ORDER BY CourseID")
+    course_ids = [row[0] for row in cursor.fetchall()]
+    return course_ids  # Return these to use in seed_timeslots
