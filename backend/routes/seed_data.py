@@ -11,8 +11,8 @@ def run_seeding():
     try:
         seed_users(cursor)
         seed_rooms_and_features(cursor)
-        course_ids = seed_course_search(cursor)
-        seed_timeslots(cursor, course_ids)      # Now it can reference existing courses
+        seed_course_search(cursor)  # Move this before seed_timeslots
+        seed_timeslots(cursor)      # Now it can reference existing courses
         seed_notifications_and_prefs(cursor)
         seed_event_details_and_topics(cursor)
         seed_event_search(cursor)
@@ -43,14 +43,17 @@ def seed_users(cursor):
     ]
     
     for u in users:
-        cursor.execute(
-            "INSERT INTO USER (ID,Email,Username,Password,userType) VALUES (%s,%s,%s,%s,%s)",
-            (u["ID"], u["Email"], u["Username"], u["Password"], u["userType"])
-        )
-        if u["userType"] == "student":
-            cursor.execute("INSERT INTO STUDENT (ID,Points) VALUES (%s,0)", (u["ID"],))
-        else:
-            cursor.execute("INSERT INTO CLUB (ID,Points) VALUES (%s,0)", (u["ID"],))
+    cursor.execute(
+        "INSERT INTO USER (ID,Email,Username,Password,userType) VALUES (%s,%s,%s,%s,%s)",
+        (u["ID"], u["Email"], u["Username"], u["Password"], u["userType"])
+    )
+    student_rows = [(u["ID"], 0) for u in users if u["userType"] == "student"]
+    club_rows = [(u["ID"], 0) for u in users if u["userType"] == "club"]
+    
+    if student_rows:
+        cursor.executemany("INSERT INTO STUDENT (ID, Points) VALUES (%s, %s)", student_rows)
+    if club_rows:
+        cursor.executemany("INSERT INTO CLUB (ID, Points) VALUES (%s, %s)", club_rows)
 
 
 def seed_rooms_and_features(cursor):
@@ -73,18 +76,23 @@ def seed_rooms_and_features(cursor):
     ]
 
     for room in rooms:
-        cursor.execute(
-            "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
-            (room["RoomNumber"], room["Building"], room["Capacity"])
+    cursor.execute(
+        "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
+        (room["RoomNumber"], room["Building"], room["Capacity"])
+    )
+    feature_rows = [
+        (room["RoomNumber"], room["Building"], feat)
+        for room in rooms
+        for feat in room["Features"]
+    ]
+    if feature_rows:
+        cursor.executemany(
+            "INSERT INTO FEATURES (RoomNumber, Building, Feature_Name) VALUES (%s, %s, %s)",
+            feature_rows,
         )
-        for feat in room["Features"]:
-            cursor.execute(
-                "INSERT INTO FEATURES (RoomNumber, Building, Feature_Name) VALUES (%s, %s, %s)",
-                (room["RoomNumber"], room["Building"], feat)
-            )
 
 
-def seed_timeslots(cursor, course_ids):
+def seed_timeslots(cursor):
     cursor.execute("DELETE FROM TIME_SLOT")
     timeslots = [
         {"UserID": 1, "Date": "2025-04-22", "Hour": "15:00:00", "Duration": 3,
@@ -136,22 +144,21 @@ def seed_timeslots(cursor, course_ids):
         {"UserID": 987654321, "Date": "2025-05-05", "Hour": "09:00:00", "Duration": 2,
          "RoomNumber": "230", "Building": "Community Hall", "BookingType": "university_event", "CourseID": None, "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-01", "Hour": "09:00:00", "Duration": 2,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[0], "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 1, "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-02", "Hour": "10:00:00", "Duration": 1,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[1], "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 2, "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-03", "Hour": "11:00:00", "Duration": 2,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[2], "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 3, "PointsAwarded": True, "IsApproved": True},
         {"UserID": 987654321, "Date": "2025-06-04", "Hour": "13:00:00", "Duration": 1,
-         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": course_ids[3], "PointsAwarded": True, "IsApproved": True},
+         "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 4, "PointsAwarded": True, "IsApproved": True},
     ]
     for ts in timeslots:
         cursor.execute(
-            """INSERT INTO TIME_SLOT 
-            (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, PointsAwarded, IsApproved)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            "INSERT INTO TIME_SLOT (UserID,Date,Hour,Duration,RoomNumber,Building,BookingType,CourseID,PointsAwarded,IsApproved)"
+            " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
             (ts["UserID"], ts["Date"], ts["Hour"], ts["Duration"],
              ts["RoomNumber"], ts["Building"], ts["BookingType"],
-             ts["CourseID"], ts["PointsAwarded"], ts["IsApproved"])
+             ts["CourseID"],ts["PointsAwarded"], ts["IsApproved"])
         )
 
 
@@ -177,12 +184,15 @@ def seed_notifications_and_prefs(cursor):
         )
 
     # Default preferences: each student (1-3) for each club (4-5)
-    for student_id in [1, 2, 3]:
-        for club_id in [4, 5]:
-            cursor.execute(
-                "INSERT INTO NOTIFICATION_PREFS (StudentID, ClubID, WantsClubNotifications, WantsUniversityNotifications) VALUES (%s, %s, %s, %s)",
-                (student_id, club_id, True, False)
-            )
+    prefs_rows = [
+    (student_id, club_id, True, False)
+    for student_id in [1, 2, 3]
+    for club_id in [4, 5]
+    ]
+    cursor.executemany(
+        "INSERT INTO NOTIFICATION_PREFS (StudentID, ClubID, WantsClubNotifications, WantsUniversityNotifications) VALUES (%s, %s, %s, %s)",
+        prefs_rows,
+    )
 
     # Club membership
     cursor.execute("INSERT INTO IS_MEMBER (StudentID, ClubID) VALUES (1, 4)")
@@ -216,6 +226,7 @@ def seed_event_details_and_topics(cursor):
 
 def seed_event_search(cursor):
         # Clean up old data
+        cursor.execute("DELETE FROM CLUB;")
         cursor.execute("DELETE FROM EVENT_DETAILS;")
         cursor.execute("DELETE FROM EVENT_TOPICS;")
 
@@ -224,6 +235,7 @@ def seed_event_search(cursor):
             {"ID": 4, "Points": 100},
             {"ID": 5, "Points": 100}
         ]
+        clubs = [(club["ID"], club["Points"]) for club in clubs]
         cursor.executemany("INSERT INTO CLUB (ID, Points) VALUES (%s, %s)", clubs)
 
         # Insert base event details
@@ -248,11 +260,16 @@ def seed_event_search(cursor):
             {"BookingID": 28, "EventName": "University Event 7", "Description": "Description for University Event 7", "IsPublic": True, "Link": "https://example.com/uni-7", "EventType": "university", "ClubID": None},
         ]
 
+        # Convert list of dictionaries to list of tuples for executemany
+        event_rows = [
+            (event["BookingID"], event["EventName"], event["Description"], event["IsPublic"], event["Link"], event["EventType"], event["ClubID"])
+            for event in events
+        ]
         cursor.executemany(
             """INSERT INTO EVENT_DETAILS 
             (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
             VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-            events
+            event_rows,
         )
 
         # Insert base event topics
@@ -275,32 +292,26 @@ def seed_event_search(cursor):
             {"BookingID": 27, "Topic": "Campus Life"},
             {"BookingID": 28, "Topic": "Study Skills"},
         ]
+        # Convert list of dictionaries to list of tuples for executemany
+        topic_rows = [(topic["BookingID"], topic["Topic"]) for topic in topics]
         cursor.executemany(
             "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
-            topics
+            topic_rows,
         )
 
 def seed_course_search(cursor):
     # Clean COURSE and related course-linked TIME_SLOTs
-    cursor.execute("DELETE FROM TIME_SLOT WHERE CourseID IS NOT NULL")
-    cursor.execute("DELETE FROM COURSE")
-    cursor.execute("ALTER TABLE COURSE AUTO_INCREMENT = 1")  # Reset auto-increment
+    cursor.execute("DELETE FROM COURSE;")
 
     courses = [
         {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lecture"},
-        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Tutorial"}, 
+        {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Tutorial"},
         {"CourseName": "CPSC 471", "SessionID": 1, "Type": "Lab"},
         {"CourseName": "PHIL 279", "SessionID": 1, "Type": "Lecture"}
     ]
     
-    # Insert courses one by one to ensure predictable IDs
-    for course in courses:
-        cursor.execute(
-            "INSERT INTO COURSE (CourseName, SessionID, Type) VALUES (%s, %s, %s)",
-            (course["CourseName"], course["SessionID"], course["Type"])
-        )
-    
-    # Now get the generated IDs to use in timeslots
-    cursor.execute("SELECT CourseID FROM COURSE ORDER BY CourseID")
-    course_ids = [row[0] for row in cursor.fetchall()]
-    return course_ids  # Return these to use in seed_timeslots
+    course_data = [(course["CourseName"], course["SessionID"], course["Type"]) for course in courses]
+    cursor.executemany(
+        "INSERT INTO COURSE (CourseName, SessionID, Type) VALUES (%s, %s, %s)",
+        course_data,
+    )
