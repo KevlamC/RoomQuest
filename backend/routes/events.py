@@ -80,3 +80,45 @@ def search_events():
 
     except Exception as e:
         return jsonify({"message": "Search failed", "error": str(e)})
+
+@event_search_bp.route('/api/events/add', methods=['POST', 'GET'])
+def add_event():
+    try:
+        booking_id = request.args.get('booking_id', type=int)
+        event_name = request.args.get('event_name')
+        description = request.args.get('description')
+        is_public = request.args.get('is_public', default=True, type=bool)
+        link = request.args.get('link')
+        club_id = request.args.get('club_id', type=int)  # optional, only for club events
+
+        if not booking_id or not event_name:
+            return jsonify({'success': False, 'error': 'booking_id and event_name are required'}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Fetch BookingType from TIME_SLOT
+        cursor.execute("SELECT BookingType FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
+        result = cursor.fetchone()
+
+        if not result:
+            return jsonify({'success': False, 'error': 'Booking ID not found'}), 404
+
+        booking_type = result[0]
+        if booking_type not in ['club_event', 'university_event']:
+            return jsonify({'success': False, 'error': f'Invalid BookingType: {booking_type}'}), 400
+
+        event_type = 'club' if booking_type == 'club_event' else 'university'
+
+        # Insert into EVENT_DETAILS
+        cursor.execute("""
+            INSERT INTO EVENT_DETAILS (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (booking_id, event_name, description, is_public, link, event_type, club_id if event_type == 'club' else None))
+
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Event added successfully!'})
+
+    except Exception as e:
+        print("Error in add_event:", e)
+        return jsonify({'success': False, 'error': str(e)}), 500
