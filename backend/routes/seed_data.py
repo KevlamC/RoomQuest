@@ -165,17 +165,17 @@ def seed_event_search(cursor):
         cursor.execute("DELETE FROM EVENT_TOPICS;")
 
         # Insert test users
-        users = [
-            (3030, "tcp@example.com", "tcp", "pass123", "student"),
-            (80, "http@example.com", "http", "pass123", "student"),
-            (6000, "host@example.com", "host", "pass123", "student"),
-            (457, "wics@example.com", "wics", "clubpass", "club"),
-            (413, "data@example.com", "data", "clubpass", "club"),
-            (987654321, "admin@example.com", "admin1", "adminpass", "admin")
-        ]
+        users2 = [
+        {"ID": 3030, "Email": "tcp@example.com", "Username": "tcp", "Password": "pass123", "userType": "student"},
+        {"ID": 80, "Email": "http@example.com", "Username": "http", "Password": "pass123", "userType": "student"},
+        {"ID": 6000, "Email": "host@example.com", "Username": "host", "Password": "pass123", "userType": "student"},
+        {"ID": 457, "Email": "wics@example.com", "Username": "wics", "Password": "clubpass", "userType": "club"},
+        {"ID": 413, "Email": "data@example.com", "Username": "data", "Password": "clubpass", "userType": "club"},
+        {"ID": 987654321, "Email": "admin@example.com", "Username": "admin1", "Password": "adminpass", "userType": "admin"}
+    ]
         cursor.executemany(
             "INSERT INTO USER (ID, Email, Username, Password, userType) VALUES (%s, %s, %s, %s, %s)",
-            users
+            users2
         )
 
         # Insert clubs
@@ -186,26 +186,43 @@ def seed_event_search(cursor):
         cursor.executemany("INSERT INTO CLUB (ID, Points) VALUES (%s, %s)", clubs)
 
         # Insert rooms (must exist before TIME_SLOT due to FK constraints)
-        rooms = [
-            ("151", "Engineering", 50),
-            ("251", "Science", 100),
-            ("353", "Health Center", 30),
-            ("150", "Business", 40),
-            ("230", "Community Hall", 200)
-        ]
+        rooms2 = [
+        {"RoomNumber": "151", "Building": "Engineering", "Capacity": 50, "Features": []},
+        {"RoomNumber": "251", "Building": "Science", "Capacity": 100, "Features": []},
+        {"RoomNumber": "353", "Building": "Health Center", "Capacity": 30, "Features": []},
+        {"RoomNumber": "150", "Building": "Business", "Capacity": 40, "Features": []},
+        {"RoomNumber": "230", "Building": "Community Hall", "Capacity": 200, "Features": []}
+    ]
         cursor.executemany(
             "INSERT INTO ROOMS (RoomNumber, Building, Capacity) VALUES (%s, %s, %s)",
-            rooms
+            rooms2
         )
 
-        # Insert base time slots for events.
+
         timeslots2 = [
-            (501, 4, "2025-05-01", "10:00:00", 4, "151", "Engineering", "club_event", None, True, True),
-            (502, 987654321, "2025-05-02", "13:00:00", 2, "251", "Science", "university_event", None, True, True),
-            (503, 5, "2025-05-03", "14:00:00", 3, "353", "Health Center", "club_event", None, True, True),
-            (504, 4, "2025-05-04", "11:00:00", 3, "150", "Business", "club_event", None, True, True),
-            (505, 987654321, "2025-05-05", "09:00:00", 2, "230", "Community Hall", "university_event", None, True, True)
-        ]
+        {"UserID": 1, "Date": "2025-05-06", "Hour": "10:00:00", "Duration": 2, "RoomNumber": "151", "Building": "Engineering", "BookingType": "student", "CourseID": None, "IsApproved": False},
+        {"UserID": 1, "Date": "2025-05-07", "Hour": "11:00:00", "Duration": 1, "RoomNumber": "251", "Building": "Science", "BookingType": "student", "CourseID": None, "IsApproved": True},
+        {"UserID": 1, "Date": "2025-05-08", "Hour": "09:00:00", "Duration": 2, "RoomNumber": "353", "Building": "Health Center", "BookingType": "student", "CourseID": None, "IsApproved": True},
+        {"UserID": 1, "Date": "2025-05-09", "Hour": "12:00:00", "Duration": 1, "RoomNumber": "150", "Building": "Business", "BookingType": "student", "CourseID": None, "IsApproved": False},
+        {"UserID": 1, "Date": "2025-05-10", "Hour": "13:00:00", "Duration": 2, "RoomNumber": "230", "Building": "Community Hall", "BookingType": "student", "CourseID": None, "IsApproved": True},
+        {"UserID": 5, "Date": "2025-05-11", "Hour": "14:00:00", "Duration": 2, "RoomNumber": "151", "Building": "Engineering", "BookingType": "club_event", "CourseID": None, "IsApproved": False},
+        {"UserID": 5, "Date": "2025-05-12", "Hour": "15:00:00", "Duration": 2, "RoomNumber": "251", "Building": "Science", "BookingType": "club_event", "CourseID": None, "IsApproved": True},
+        {"UserID": 5, "Date": "2025-05-13", "Hour": "10:00:00", "Duration": 1, "RoomNumber": "353", "Building": "Health Center", "BookingType": "club_event", "CourseID": None, "IsApproved": True},
+        {"UserID": 5, "Date": "2025-05-14", "Hour": "11:00:00", "Duration": 1, "RoomNumber": "150", "Building": "Business", "BookingType": "club_event", "CourseID": None, "IsApproved": False},
+        {"UserID": 5, "Date": "2025-05-15", "Hour": "09:00:00", "Duration": 2, "RoomNumber": "230", "Building": "Community Hall", "BookingType": "club_event", "CourseID": None, "IsApproved": True},
+        {"UserID": 987654321, "Date": "2025-05-16", "Hour": "10:00:00", "Duration": 2, "RoomNumber": "151", "Building": "Engineering", "BookingType": "university_event", "CourseID": None, "IsApproved": False},
+        {"UserID": 2, "Date": "2025-05-17", "Hour": "13:00:00", "Duration": 2, "RoomNumber": "251", "Building": "Science", "BookingType": "student", "CourseID": None, "IsApproved": False},
+        {"UserID": 3, "Date": "2025-05-18", "Hour": "09:00:00", "Duration": 2, "RoomNumber": "353", "Building": "Health Center", "BookingType": "student", "CourseID": None, "IsApproved": False},
+        {"UserID": 987654321, "Date": "2025-05-19", "Hour": "12:00:00", "Duration": 1, "RoomNumber": "150", "Building": "Business", "BookingType": "university_event", "CourseID": None, "IsApproved": False},
+        {"UserID": 2, "Date": "2025-05-20", "Hour": "13:00:00", "Duration": 2, "RoomNumber": "230", "Building": "Community Hall", "BookingType": "student", "CourseID": None, "IsApproved": False},
+        {"UserID": 4, "Date": "2025-05-01", "Hour": "10:00:00", "Duration": 4, "RoomNumber": "151", "Building": "Engineering", "BookingType": "club_event", "CourseID": None, "IsApproved": True},
+        {"UserID": 987654321, "Date": "2025-05-02", "Hour": "13:00:00", "Duration": 2, "RoomNumber": "251", "Building": "Science", "BookingType": "university_event", "CourseID": None, "IsApproved": True},
+        {"UserID": 5, "Date": "2025-05-03", "Hour": "14:00:00", "Duration": 3, "RoomNumber": "353", "Building": "Health Center", "BookingType": "club_event", "CourseID": None, "IsApproved": True},
+        {"UserID": 4, "Date": "2025-05-04", "Hour": "11:00:00", "Duration": 3, "RoomNumber": "150", "Building": "Business", "BookingType": "club_event", "CourseID": None, "IsApproved": True},
+        {"UserID": 987654321, "Date": "2025-05-05", "Hour": "09:00:00", "Duration": 2, "RoomNumber": "230", "Building": "Community Hall", "BookingType": "university_event", "CourseID": None, "IsApproved": True}
+    ]
+
+
         cursor.executemany(
             """INSERT INTO TIME_SLOT 
             (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, IsApproved, PointsAwarded)
@@ -215,12 +232,27 @@ def seed_event_search(cursor):
 
         # Insert base event details
         events = [
-            (501, "Hackathon", "Annual student hackathon", True, "https://hackathon.com", "club", 4),
-            (502, "AI Conference", "Talks on AI", True, "https://ai.com", "university", None),
-            (503, "Mental Health", "Well-being workshop", True, "", "club", 5),
-            (504, "Startup Pitch", "Entrepreneurship night", True, "https://startup.com", "club", 4),
-            (505, "Green Day", "Sustainability event", True, "", "university", None)
-        ]
+        {"BookingID": 501, "EventName": "Hackathon", "Description": "Annual student hackathon", "IsPublic": True, "Link": "https://hackathon.com", "EventType": "club", "ClubID": 4},
+        {"BookingID": 502, "EventName": "AI Conference", "Description": "Talks on AI", "IsPublic": True, "Link": "https://ai.com", "EventType": "university", "ClubID": None},
+        {"BookingID": 503, "EventName": "Mental Health", "Description": "Well-being workshop", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
+        {"BookingID": 504, "EventName": "Startup Pitch", "Description": "Entrepreneurship night", "IsPublic": True, "Link": "https://startup.com", "EventType": "club", "ClubID": 4},
+        {"BookingID": 505, "EventName": "Green Day", "Description": "Sustainability event", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 506, "EventName": "Career Fair", "Description": "Meet industry reps", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 507, "EventName": "Resume Workshop", "Description": "Improve your resume", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 508, "EventName": "Exam Prep", "Description": "Final exam help session", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
+        {"BookingID": 509, "EventName": "Student Meetup", "Description": "Make new friends", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 510, "EventName": "Chess Tournament", "Description": "Chess battles!", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 511, "EventName": "Tech Showcase", "Description": "Cool club inventions", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
+        {"BookingID": 512, "EventName": "Robotics Demo", "Description": "Robot competition", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
+        {"BookingID": 513, "EventName": "Gaming Night", "Description": "Board and video games", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
+        {"BookingID": 514, "EventName": "Art Expo", "Description": "Art from our members", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
+        {"BookingID": 515, "EventName": "Dance Workshop", "Description": "Club-led dance class", "IsPublic": True, "Link": "", "EventType": "club", "ClubID": 5},
+        {"BookingID": 516, "EventName": "Open House", "Description": "Campus-wide event", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 517, "EventName": "Workshop: Study Skills", "Description": "Tips for academic success", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 518, "EventName": "Mental Wellness", "Description": "De-stress tips", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 519, "EventName": "Alumni Talk", "Description": "Hear from grads", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None},
+        {"BookingID": 520, "EventName": "Coding Bootcamp", "Description": "Learn to code fast", "IsPublic": True, "Link": "", "EventType": "university", "ClubID": None}
+    ]
         cursor.executemany(
             """INSERT INTO EVENT_DETAILS 
             (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
@@ -230,88 +262,31 @@ def seed_event_search(cursor):
 
         # Insert base event topics
         topics = [
-            (501, "Hackathon"),
-            (502, "Artificial Intelligence"),
-            (503, "Mental Health"),
-            (504, "Entrepreneurship"),
-            (505, "Sustainability")
+            {"BookingID": 501, "Topic": "Hackathon"},
+            {"BookingID": 502, "Topic": "Artificial Intelligence"},
+            {"BookingID": 503, "Topic": "Mental Health"},
+            {"BookingID": 504, "Topic": "Entrepreneurship"},
+            {"BookingID": 505, "Topic": "Sustainability"},
+            {"BookingID": 506, "Topic": "Career Development"},
+            {"BookingID": 507, "Topic": "Resumes"},
+            {"BookingID": 508, "Topic": "Study Help"},
+            {"BookingID": 509, "Topic": "Community"},
+            {"BookingID": 510, "Topic": "Board Games"},
+            {"BookingID": 511, "Topic": "Technology"},
+            {"BookingID": 512, "Topic": "Robotics"},
+            {"BookingID": 513, "Topic": "Gaming"},
+            {"BookingID": 514, "Topic": "Art"},
+            {"BookingID": 515, "Topic": "Dance"},
+            {"BookingID": 516, "Topic": "Campus Life"},
+            {"BookingID": 517, "Topic": "Study Skills"},
+            {"BookingID": 518, "Topic": "Mental Health"},
+            {"BookingID": 519, "Topic": "Alumni"},
+            {"BookingID": 520, "Topic": "Programming"}
         ]
         cursor.executemany(
             "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
             topics
         )
-
-        # 15 new time slots
-        extra_timeslots = [
-            (506, 1, "2025-05-06", "10:00:00", 2, "101", "Engineering", "student", None, False, True),
-            (507, 1, "2025-05-07", "11:00:00", 1, "201", "Science", "student", None, True, True),
-            (508, 1, "2025-05-08", "09:00:00", 2, "303", "Health Center", "student", None, True, True),
-            (509, 1, "2025-05-09", "12:00:00", 1, "100", "Business", "student", None, False, False),
-            (510, 1, "2025-05-10", "13:00:00", 2, "200", "Community Hall", "student", None, True, True),
-            (511, 5, "2025-05-11", "14:00:00", 2, "101", "Engineering", "club_event", None, False, True),
-            (512, 5, "2025-05-12", "15:00:00", 2, "201", "Science", "club_event", None, True, True),
-            (513, 5, "2025-05-13", "10:00:00", 1, "303", "Health Center", "club_event", None, True, True),
-            (514, 5, "2025-05-14", "11:00:00", 1, "100", "Business", "club_event", None, False, False),
-            (515, 5, "2025-05-15", "09:00:00", 2, "200", "Community Hall", "club_event", None, True, True),
-            (516, 987654321, "2025-05-16", "10:00:00", 2, "101", "Engineering", "university_event", None, False, False),
-            (517, 2, "2025-05-17", "13:00:00", 2, "201", "Science", "student", None, False, True),
-            (518, 3, "2025-05-18", "09:00:00", 2, "303", "Health Center", "student", None, False, True),
-            (519, 987654321, "2025-05-19", "12:00:00", 1, "100", "Business", "university_event", None, False, True),
-            (520, 2, "2025-05-20", "13:00:00", 2, "200", "Community Hall", "student", None, False, True)
-        ]
-        cursor.executemany("""
-            INSERT INTO TIME_SLOT 
-            (BookingID, UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, PointsAwarded, IsApproved)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, extra_timeslots)
-
-        # Matching event details
-        extra_events = [
-            (506, "Career Fair", "Meet industry reps", True, "", "university", None),
-            (507, "Resume Workshop", "Improve your resume", True, "", "university", None),
-            (508, "Exam Prep", "Final exam help session", True, "", "club", 5),
-            (509, "Student Meetup", "Make new friends", True, "", "university", None),
-            (510, "Chess Tournament", "Chess battles!", True, "", "university", None),
-            (511, "Tech Showcase", "Cool club inventions", True, "", "club", 5),
-            (512, "Robotics Demo", "Robot competition", True, "", "club", 5),
-            (513, "Gaming Night", "Board and video games", True, "", "club", 5),
-            (514, "Art Expo", "Art from our members", True, "", "club", 5),
-            (515, "Dance Workshop", "Club-led dance class", True, "", "club", 5),
-            (516, "Open House", "Campus-wide event", True, "", "university", None),
-            (517, "Workshop: Study Skills", "Tips for academic success", True, "", "university", None),
-            (518, "Mental Wellness", "De-stress tips", True, "", "university", None),
-            (519, "Alumni Talk", "Hear from grads", True, "", "university", None),
-            (520, "Coding Bootcamp", "Learn to code fast", True, "", "university", None)
-        ]
-        cursor.executemany("""
-            INSERT INTO EVENT_DETAILS 
-            (BookingID, EventName, Description, IsPublic, Link, EventType, ClubID)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, extra_events)
-
-        # Matching event topics
-        extra_topics = [
-            (506, "Career Development"),
-            (507, "Resumes"),
-            (508, "Study Help"),
-            (509, "Community"),
-            (510, "Board Games"),
-            (511, "Technology"),
-            (512, "Robotics"),
-            (513, "Gaming"),
-            (514, "Art"),
-            (515, "Dance"),
-            (516, "Campus Life"),
-            (517, "Study Skills"),
-            (518, "Mental Health"),
-            (519, "Alumni"),
-            (520, "Programming")
-        ]
-        cursor.executemany(
-            "INSERT INTO EVENT_TOPICS (BookingID, Topic) VALUES (%s, %s)",
-            extra_topics
-        )
-
 
 def seed_course_search(cursor):
     # Clean COURSE and related course-linked TIME_SLOTs
@@ -320,10 +295,10 @@ def seed_course_search(cursor):
 
     # Insert course entries (CourseName + SessionID = composite for uniqueness)
     courses = [
-        (1, "CPSC 471", "1", "Lecture"),
-        (2, "CPSC 471", "1", "Tutorial"),
-        (3, "CPSC 471", "1", "Lab"),
-        (4, "PHIL 279", "1", "Lecture")
+        {"CourseID": 1, "CourseName": "CPSC 471", "SessionID": "1", "Type": "Lecture"},
+        {"CourseID": 2, "CourseName": "CPSC 471", "SessionID": "1", "Type": "Tutorial"},
+        {"CourseID": 3, "CourseName": "CPSC 471", "SessionID": "1", "Type": "Lab"},
+        {"CourseID": 4, "CourseName": "PHIL 279", "SessionID": "1", "Type": "Lecture"}
     ]
     cursor.executemany(
         "INSERT INTO COURSE (CourseID, CourseName, SessionID, Type) VALUES (%s, %s, %s, %s)",
@@ -332,10 +307,10 @@ def seed_course_search(cursor):
 
     # Insert TIME_SLOTs linked to courses
     slots = [
-        (201, 987654321, "2025-06-01", "09:00:00", 2, "101", "Engineering", "university_event", 1, True, True),
-        (202, 987654321, "2025-06-02", "10:00:00", 1, "101", "Engineering", "university_event", 2, True, True),
-        (203, 987654321, "2025-06-03", "11:00:00", 2, "101", "Engineering", "university_event", 3, True, True),
-        (204, 987654321, "2025-06-04", "13:00:00", 1, "101", "Engineering", "university_event", 4, True, True),
+        {"BookingID": 201, "UserID": 987654321, "Date": "2025-06-01", "Hour": "09:00:00", "Duration": 2, "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 1, "IsApproved": True, "PointsAwarded": True},
+        {"BookingID": 202, "UserID": 987654321, "Date": "2025-06-02", "Hour": "10:00:00", "Duration": 1, "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 2, "IsApproved": True, "PointsAwarded": True},
+        {"BookingID": 203, "UserID": 987654321, "Date": "2025-06-03", "Hour": "11:00:00", "Duration": 2, "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 3, "IsApproved": True, "PointsAwarded": True},
+        {"BookingID": 204, "UserID": 987654321, "Date": "2025-06-04", "Hour": "13:00:00", "Duration": 1, "RoomNumber": "101", "Building": "Engineering", "BookingType": "university_event", "CourseID": 4, "IsApproved": True, "PointsAwarded": True}
     ]
     cursor.executemany(
         """INSERT INTO TIME_SLOT
