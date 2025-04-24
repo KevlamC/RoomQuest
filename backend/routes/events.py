@@ -84,30 +84,64 @@ def search_events():
 @event_search_bp.route('/api/events/add', methods=['POST', 'GET'])
 def add_event():
     try:
-        booking_id = request.args.get('booking_id', type=int)
-        event_name = request.args.get('event_name')
-        description = request.args.get('description')
-        is_public = request.args.get('is_public', default=True, type=bool)
-        link = request.args.get('link')
-        club_id = request.args.get('club_id', type=int)  # optional, only for club events
+        # Required Booking Info
+        user_id = request.args.get('user_id', type=int)
+        date = request.args.get('date')
+        hour = request.args.get('time')  # 'time' is used for 'Hour' column
+        duration = request.args.get('duration', type=int)
+        room_number = request.args.get('room_number')
+        building = request.args.get('building')
+        booking_type = request.args.get('booking_type')
+        
+        # Optional course info
+        course_name = request.args.get('course_name')
+        session_id = request.args.get('session_id')
+        course_type = request.args.get('course_type')
 
-        if not booking_id or not event_name:
-            return jsonify({'success': False, 'error': 'booking_id and event_name are required'}), 400
+        # Required Event Info
+        event_name = request.args.get('event_name')
+
+        # Optional Event Info
+        description = request.args.get('description')
+        is_public = request.args.get('is_public', default=True, type=lambda v: v.lower() == 'true')
+        link = request.args.get('link')
+        club_id = request.args.get('club_id', type=int)
+
+        if not all([user_id, date, hour, duration, room_number, building, booking_type, event_name]):
+            return jsonify({'success': False, 'error': 'Missing required booking/event fields'}), 400
 
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Fetch BookingType from TIME_SLOT
-        cursor.execute("SELECT BookingType FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
-        result = cursor.fetchone()
+        # Lookup or insert CourseID if course details provided
+        course_id = None
+        if course_name and session_id and course_type:
+            cursor.execute("""
+                SELECT CourseID FROM COURSE
+                WHERE CourseName = %s AND SessionID = %s AND Type = %s
+            """, (course_name, session_id, course_type))
+            course_row = cursor.fetchone()
 
-        if not result:
-            return jsonify({'success': False, 'error': 'Booking ID not found'}), 404
+            if course_row:
+                course_id = course_row[0]
+            else:
+                cursor.execute("""
+                    INSERT INTO COURSE (CourseName, SessionID, Type)
+                    VALUES (%s, %s, %s)
+                """, (course_name, session_id, course_type))
+                conn.commit()
+                course_id = cursor.lastrowid
 
-        booking_type = result[0]
+        # Insert into TIME_SLOT
+        cursor.execute("""
+            INSERT INTO TIME_SLOT (UserID, Date, Hour, Duration, RoomNumber, Building, BookingType, CourseID, PointsAwarded, IsApproved)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE, FALSE)
+        """, (user_id, date, hour, duration, room_number, building, booking_type, course_id))
+        booking_id = cursor.lastrowid
+
+        # Determine EventType
         if booking_type not in ['club_event', 'university_event']:
             return jsonify({'success': False, 'error': f'Invalid BookingType: {booking_type}'}), 400
-
         event_type = 'club' if booking_type == 'club_event' else 'university'
 
         # Insert into EVENT_DETAILS
@@ -117,8 +151,33 @@ def add_event():
         """, (booking_id, event_name, description, is_public, link, event_type, club_id if event_type == 'club' else None))
 
         conn.commit()
-        return jsonify({'success': True, 'message': 'Event added successfully!'})
+        return jsonify({'success': True, 'message': 'Event and booking added successfully!', 'booking_id': booking_id})
 
     except Exception as e:
         print("Error in add_event:", e)
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+@event_search_bp.route('/api/events/delete', methods=['POST', 'GET'])
+def delete_event():
+    try:
+        booking_id = request.args.get('booking_id', type=int)
+        if not booking_id:
+            return jsonify({'success': False, 'error': 'Missing booking_id'}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Check if the event exists
+        cursor.execute("SELECT * FROM EVENT_DETAILS WHERE BookingID = %s", (booking_id,))
+        if not cursor.fetchone():
+            return jsonify({'success': False, 'error': 'Event not found'}), 404
+
+        # Delete from TIME_SLOT (will cascade delete EVENT_DETAILS)
+        cursor.execute("DELETE FROM TIME_SLOT WHERE BookingID = %s", (booking_id,))
+        conn.commit()
+
+        return jsonify({'success': True, 'message': f'Event with BookingID {booking_id} deleted successfully.'})
+
+    except Exception as e:
+        print("Error in delete_event:", e)
         return jsonify({'success': False, 'error': str(e)}), 500
