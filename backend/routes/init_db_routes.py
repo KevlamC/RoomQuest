@@ -213,16 +213,6 @@ def init_db():
            );
            """)
         
-        cursor.execute("""
-           CREATE TABLE POINTS_TRANSACTION (
-               TransactionID INT PRIMARY KEY,
-               StudentID INT,
-               PointsChange INT,
-               TransactionDate DATETIME,
-               Description VARCHAR(255),
-               FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
-           );
-           """)
         
         connection.commit()
         cursor.close()
