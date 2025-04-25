@@ -149,10 +149,12 @@ def init_db():
 
         cursor.execute("""
             CREATE TABLE USER_EVENT_TOPIC_PREFS (
-            UserID INT NOT NULL,
+            StudentID INT DEFAULT NULL,
+            ClubID INT DEFAULT NULL,
             Topic VARCHAR(255) NOT NULL,
             PRIMARY KEY (UserID, Topic),
-            FOREIGN KEY (UserID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (StudentID) REFERENCES STUDENT(ID) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (ClubID) REFERENCES Club(ID) ON DELETE CASCADE ON UPDATE CASCADE
         );
         """)
         
