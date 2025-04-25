@@ -10,7 +10,6 @@ backend/
 ├── app.py                      # Main Flask app
 ├── config.py                   # MySQL database connection setup
 ├── routes/
-│   ├── admin.py                # Admin endpoints
 │   ├── auth.py                 # Login/authentication
 │   ├── events.py               # Event creation and lookup
 │   ├── features_add_del.py     # Feature management
@@ -26,11 +25,10 @@ backend/
 │   └── user_list_bp.py         # List all users
 └── services/
     └── scheduler.py            # Time-slot overlap checks
-```
-
+    └── admin.py                # Admin endpoints
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 - **Python 3.10+**
 - **Flask** (API framework)
@@ -69,23 +67,6 @@ backend/
    ```bash
    python app.py
    ```
-
----
-
-## 🔄 API Endpoints Overview
-
-| Endpoint                       | Method | Description                          |
-|-------------------------------|--------|--------------------------------------|
-| `/api/signup`                 | POST   | Register new user                    |
-| `/api/login`                  | POST   | User login                           |
-| `/api/rooms/search`           | GET    | Search rooms based on features       |
-| `/api/timeslot/add`           | POST   | Add new room booking                 |
-| `/api/admin/unapproved`       | GET    | Fetch unapproved bookings            |
-| `/api/admin/approve`          | POST   | Approve a booking                    |
-| `/api/events/create`          | POST   | Create new event                     |
-| `/api/notifications/user`     | GET    | Fetch notifications for a user       |
-| `/api/points/leaderboard`     | GET    | View user/club leaderboard           |
-
 ---
 
 ## Core Features
