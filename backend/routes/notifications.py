@@ -348,7 +348,7 @@ def notify_university_event(cur, booking):
     """, (notification_id, booking["BookingID"]))
 
 
-@notification_bp.route('/api/update-notification-preferences', methods=['POST'])
+@notifs_bp.route('/api/update-notification-preferences', methods=['POST'])
 def update_notification_preferences():
     try:
         data = request.get_json()
