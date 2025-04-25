@@ -348,6 +348,87 @@ def notify_university_event(cur, booking):
     """, (notification_id, booking["BookingID"]))
 
 
+@notification_bp.route('/api/update-notification-preferences', methods=['POST'])
+def update_notification_preferences():
+    try:
+        data = request.get_json()
+        student_id = data.get('student_id')
+        selected_prefs = data.get('preferences', [])  # List of Club IDs for which notifications are wanted
+
+        if not student_id:
+            return jsonify({"success": False, "message": "Student ID is required"}), 400
+
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Step 1: Reset all preferences for the student
+        cursor.execute("""
+            UPDATE NOTIFICATION_PREFS
+            SET WantsClubNotifications = FALSE, WantsUniversityNotifications = FALSE
+            WHERE StudentID = %s
+        """, (student_id,))
+
+        # Step 2: Update preferences based on the selected list
+        for club_id in selected_prefs:
+            cursor.execute("""
+                INSERT INTO NOTIFICATION_PREFS (StudentID, ClubID, WantsClubNotifications, WantsUniversityNotifications)
+                VALUES (%s, %s, TRUE, TRUE)
+                ON DUPLICATE KEY UPDATE WantsClubNotifications = TRUE, WantsUniversityNotifications = TRUE
+            """, (student_id, club_id))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        return jsonify({"success": True, "message": "Notification preferences updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@notifs_bp.route('/api/update-event-topic-preferences', methods=['POST'])
+def update_event_topic_preferences():
+    try:
+        data = request.get_json()
+        student_id = data.get('student_id')
+        club_id = data.get('club_id')  # Optional: If preferences are club-specific
+        selected_topics = data.get('topics', [])  # List of topics the user opted into
+
+        if not student_id:
+            return jsonify({"success": False, "message": "Student ID is required"}), 400
+
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Step 1: Delete all existing preferences for the student (and optionally club, if specified)
+        if club_id:
+            cursor.execute("""
+                DELETE FROM USER_EVENT_TOPIC_PREFS
+                WHERE StudentID = %s AND ClubID = %s
+            """, (student_id, club_id))
+        else:
+            cursor.execute("""
+                DELETE FROM USER_EVENT_TOPIC_PREFS
+                WHERE StudentID = %s
+            """, (student_id,))
+
+        # Step 2: Insert the new preferences based on the selected topics
+        for topic in selected_topics:
+            cursor.execute("""
+                INSERT INTO USER_EVENT_TOPIC_PREFS (StudentID, ClubID, Topic)
+                VALUES (%s, %s, %s)
+            """, (student_id, club_id, topic))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        return jsonify({"success": True, "message": "Event topic preferences updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # Delete a specific notification (POST and GET).
 @notifs_bp.route("/api/notifications/delete", methods=["POST", "GET"])
 def delete_notification():
