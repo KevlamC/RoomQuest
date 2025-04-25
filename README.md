@@ -27,6 +27,7 @@ backend/
     └── scheduler.py            # Time-slot overlap checks
     └── admin.py                # Admin endpoints
 ---
+```
 
 ## Tech Stack
 
