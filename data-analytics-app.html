@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataViz AI - Analytics Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>DataViz AI</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-link active">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#datasets" class="nav-link">
+                    <i class="fas fa-database"></i> Datasets
+                </a>
+                <a href="#reports" class="nav-link">
+                    <i class="fas fa-file-alt"></i> Reports
+                </a>
+                <a href="#settings" class="nav-link">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+            <div class="user-actions">
+                <button class="btn-icon" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </button>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=667eea&color=fff" alt="User">
+                    <span>John Doe</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Data Sources</h3>
+                <div class="data-source-list">
+                    <div class="data-source-item active">
+                        <i class="fas fa-file-csv"></i>
+                        <span>sales_data.csv</span>
+                        <button class="btn-remove"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="data-source-item">
+                        <i class="fas fa-file-excel"></i>
+                        <span>customers.xlsx</span>
+                        <button class="btn-remove"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="data-source-item">
+                        <i class="fas fa-file-alt"></i>
+                        <span>inventory.json</span>
+                        <button class="btn-remove"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Quick Filters</h3>
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <select class="filter-select">
+                        <option>Last 7 days</option>
+                        <option>Last 30 days</option>
+                        <option>Last 90 days</option>
+                        <option>This Year</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked> Sales
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked> Revenue
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox"> Expenses
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox"> Profit
+                        </label>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-full">Apply Filters</button>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Chart Types</h3>
+                <div class="chart-type-grid">
+                    <button class="chart-type-btn active" title="Bar Chart">
+                        <i class="fas fa-chart-bar"></i>
+                    </button>
+                    <button class="chart-type-btn" title="Line Chart">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button class="chart-type-btn" title="Pie Chart">
+                        <i class="fas fa-chart-pie"></i>
+                    </button>
+                    <button class="chart-type-btn" title="Area Chart">
+                        <i class="fas fa-chart-area"></i>
+                    </button>
+                    <button class="chart-type-btn" title="Scatter Plot">
+                        <i class="fas fa-braille"></i>
+                    </button>
+                    <button class="chart-type-btn" title="Heatmap">
+                        <i class="fas fa-th"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="section-header">
+                    <h2>Upload Data</h2>
+                    <p>Drag and drop your files or click to browse</p>
+                </div>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p class="upload-text">
+                        <strong>Click to upload</strong> or drag and drop
+                    </p>
+                    <p class="upload-hint">
+                        CSV, Excel, JSON, or SQL files (Max 50MB)
+                    </p>
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls,.json,.sql" multiple>
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-upload"></i> Choose Files
+                    </button>
+                </div>
+            </section>
+
+            <!-- AI Chat Section -->
+            <section class="ai-chat-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-robot"></i> AI Assistant</h2>
+                    <p>Ask AI to generate visualizations for you</p>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message ai-message">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <p>Hello! I'm your AI analytics assistant. I can help you create visualizations from your data. Try asking me things like:</p>
+                                <ul>
+                                    <li>"Show me a bar chart of sales by region"</li>
+                                    <li>"Create a line graph showing revenue trends over time"</li>
+                                    <li>"Generate a pie chart of customer demographics"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <div class="chat-suggestions">
+                            <button class="suggestion-chip">📊 Sales trends</button>
+                            <button class="suggestion-chip">📈 Revenue analysis</button>
+                            <button class="suggestion-chip">🥧 Distribution chart</button>
+                            <button class="suggestion-chip">📉 Compare metrics</button>
+                        </div>
+                        <div class="chat-input-wrapper">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Ask AI to create a visualization...">
+                            <button class="btn-send" id="sendBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Visualizations Grid -->
+            <section class="visualizations-section">
+                <div class="section-header">
+                    <h2>Your Visualizations</h2>
+                    <div class="view-controls">
+                        <button class="view-btn active" title="Grid View">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" title="List View">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="viz-grid">
+                    <!-- Visualization Card 1 -->
+                    <div class="viz-card">
+                        <div class="viz-header">
+                            <h3>Sales by Region</h3>
+                            <div class="viz-actions">
+                                <button class="btn-icon" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn-icon" title="Share">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <button class="btn-icon" title="More">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="viz-content">
+                            <div class="chart-placeholder">
+                                <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Bar Chart Visualization -->
+                                    <rect x="50" y="180" width="50" height="50" fill="#667eea"/>
+                                    <rect x="120" y="140" width="50" height="90" fill="#764ba2"/>
+                                    <rect x="190" y="160" width="50" height="70" fill="#f093fb"/>
+                                    <rect x="260" y="120" width="50" height="110" fill="#4facfe"/>
+                                    <rect x="330" y="150" width="50" height="80" fill="#00f2fe"/>
+                                    <!-- Axis -->
+                                    <line x1="40" y1="230" x2="390" y2="230" stroke="#e0e0e0" stroke-width="2"/>
+                                    <line x1="40" y1="30" x2="40" y2="230" stroke="#e0e0e0" stroke-width="2"/>
+                                    <!-- Labels -->
+                                    <text x="75" y="245" font-size="10" text-anchor="middle" fill="#666">North</text>
+                                    <text x="145" y="245" font-size="10" text-anchor="middle" fill="#666">South</text>
+                                    <text x="215" y="245" font-size="10" text-anchor="middle" fill="#666">East</text>
+                                    <text x="285" y="245" font-size="10" text-anchor="middle" fill="#666">West</text>
+                                    <text x="355" y="245" font-size="10" text-anchor="middle" fill="#666">Central</text>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="viz-footer">
+                            <span class="viz-type"><i class="fas fa-chart-bar"></i> Bar Chart</span>
+                            <span class="viz-date">Updated 2h ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Visualization Card 2 -->
+                    <div class="viz-card">
+                        <div class="viz-header">
+                            <h3>Revenue Trend</h3>
+                            <div class="viz-actions">
+                                <button class="btn-icon" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn-icon" title="Share">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <button class="btn-icon" title="More">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="viz-content">
+                            <div class="chart-placeholder">
+                                <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Line Chart Visualization -->
+                                    <defs>
+                                        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.3"/>
+                                            <stop offset="100%" style="stop-color:#667eea;stop-opacity:0"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Area fill -->
+                                    <path d="M 50,180 L 100,140 L 150,160 L 200,100 L 250,120 L 300,80 L 350,110 L 350,230 L 50,230 Z" 
+                                          fill="url(#lineGradient)"/>
+                                    <!-- Line -->
+                                    <path d="M 50,180 L 100,140 L 150,160 L 200,100 L 250,120 L 300,80 L 350,110" 
+                                          stroke="#667eea" stroke-width="3" fill="none"/>
+                                    <!-- Points -->
+                                    <circle cx="50" cy="180" r="5" fill="#667eea"/>
+                                    <circle cx="100" cy="140" r="5" fill="#667eea"/>
+                                    <circle cx="150" cy="160" r="5" fill="#667eea"/>
+                                    <circle cx="200" cy="100" r="5" fill="#667eea"/>
+                                    <circle cx="250" cy="120" r="5" fill="#667eea"/>
+                                    <circle cx="300" cy="80" r="5" fill="#667eea"/>
+                                    <circle cx="350" cy="110" r="5" fill="#667eea"/>
+                                    <!-- Axis -->
+                                    <line x1="40" y1="230" x2="390" y2="230" stroke="#e0e0e0" stroke-width="2"/>
+                                    <line x1="40" y1="30" x2="40" y2="230" stroke="#e0e0e0" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="viz-footer">
+                            <span class="viz-type"><i class="fas fa-chart-line"></i> Line Chart</span>
+                            <span class="viz-date">Updated 1h ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Visualization Card 3 -->
+                    <div class="viz-card">
+                        <div class="viz-header">
+                            <h3>Product Distribution</h3>
+                            <div class="viz-actions">
+                                <button class="btn-icon" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn-icon" title="Share">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <button class="btn-icon" title="More">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="viz-content">
+                            <div class="chart-placeholder">
+                                <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Pie Chart Visualization -->
+                                    <circle cx="200" cy="125" r="80" fill="none" stroke="#667eea" stroke-width="60" 
+                                            stroke-dasharray="150 352" transform="rotate(-90 200 125)"/>
+                                    <circle cx="200" cy="125" r="80" fill="none" stroke="#764ba2" stroke-width="60" 
+                                            stroke-dasharray="125 377" stroke-dashoffset="-150" transform="rotate(-90 200 125)"/>
+                                    <circle cx="200" cy="125" r="80" fill="none" stroke="#f093fb" stroke-width="60" 
+                                            stroke-dasharray="77 425" stroke-dashoffset="-275" transform="rotate(-90 200 125)"/>
+                                    <circle cx="200" cy="125" r="30" fill="#ffffff"/>
+                                    <!-- Legend -->
+                                    <rect x="320" y="70" width="15" height="15" fill="#667eea"/>
+                                    <text x="340" y="81" font-size="12" fill="#666">Electronics (45%)</text>
+                                    <rect x="320" y="95" width="15" height="15" fill="#764ba2"/>
+                                    <text x="340" y="106" font-size="12" fill="#666">Clothing (35%)</text>
+                                    <rect x="320" y="120" width="15" height="15" fill="#f093fb"/>
+                                    <text x="340" y="131" font-size="12" fill="#666">Food (20%)</text>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="viz-footer">
+                            <span class="viz-type"><i class="fas fa-chart-pie"></i> Pie Chart</span>
+                            <span class="viz-date">Updated 3h ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Visualization Card 4 -->
+                    <div class="viz-card">
+                        <div class="viz-header">
+                            <h3>Monthly Comparison</h3>
+                            <div class="viz-actions">
+                                <button class="btn-icon" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn-icon" title="Share">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <button class="btn-icon" title="More">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="viz-content">
+                            <div class="chart-placeholder">
+                                <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Area Chart -->
+                                    <defs>
+                                        <linearGradient id="areaGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.4"/>
+                                            <stop offset="100%" style="stop-color:#4facfe;stop-opacity:0"/>
+                                        </linearGradient>
+                                        <linearGradient id="areaGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#f093fb;stop-opacity:0.4"/>
+                                            <stop offset="100%" style="stop-color:#f093fb;stop-opacity:0"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- First Area -->
+                                    <path d="M 50,150 L 100,130 L 150,140 L 200,110 L 250,120 L 300,100 L 350,115 L 350,230 L 50,230 Z" 
+                                          fill="url(#areaGradient1)"/>
+                                    <path d="M 50,150 L 100,130 L 150,140 L 200,110 L 250,120 L 300,100 L 350,115" 
+                                          stroke="#4facfe" stroke-width="2" fill="none"/>
+                                    <!-- Second Area -->
+                                    <path d="M 50,180 L 100,170 L 150,175 L 200,160 L 250,165 L 300,155 L 350,160 L 350,230 L 50,230 Z" 
+                                          fill="url(#areaGradient2)"/>
+                                    <path d="M 50,180 L 100,170 L 150,175 L 200,160 L 250,165 L 300,155 L 350,160" 
+                                          stroke="#f093fb" stroke-width="2" fill="none"/>
+                                    <!-- Axis -->
+                                    <line x1="40" y1="230" x2="390" y2="230" stroke="#e0e0e0" stroke-width="2"/>
+                                    <line x1="40" y1="30" x2="40" y2="230" stroke="#e0e0e0" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="viz-footer">
+                            <span class="viz-type"><i class="fas fa-chart-area"></i> Area Chart</span>
+                            <span class="viz-date">Updated 5h ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Add New Visualization Card -->
+                    <div class="viz-card add-viz-card">
+                        <div class="add-viz-content">
+                            <i class="fas fa-plus-circle"></i>
+                            <h3>Create New Visualization</h3>
+                            <p>Upload data or ask AI to generate a chart</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Total Datasets</h4>
+                            <p class="stat-value">24</p>
+                            <span class="stat-change positive"><i class="fas fa-arrow-up"></i> 12%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Visualizations</h4>
+                            <p class="stat-value">48</p>
+                            <span class="stat-change positive"><i class="fas fa-arrow-up"></i> 8%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Team Members</h4>
+                            <p class="stat-value">12</p>
+                            <span class="stat-change neutral"><i class="fas fa-minus"></i> 0%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Saved Time</h4>
+                            <p class="stat-value">127h</p>
+                            <span class="stat-change positive"><i class="fas fa-arrow-up"></i> 24%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
